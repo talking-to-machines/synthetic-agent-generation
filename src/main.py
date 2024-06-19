@@ -12,18 +12,19 @@ def main(request):
     data = clean_data(data, request["demographic_attributes"] + request["questions"])
 
     # Generate prompts
-    prompts = generate_prompts(data, ["col1", "col2"], ["target_col"])
+    prompts = generate_prompts(
+        data,
+        request["survey_context"],
+        request["demographic_attributes"],
+        request["questions"],
+    )
 
     # Get LLM responses
-    predictions = []
-    ground_truths = []
-    for prompt, target in prompts:
-        response = query_llm(prompt)
-        predictions.append(response)
-        ground_truths.append(target["target_col"])
+    prompts_with_response = query_llm(prompts)
 
     # Evaluate responses
-    results = evaluate_responses(predictions, ground_truths)
+    results = evaluate_responses(prompts_with_response)
+
     return jsonify({"Evaluation Results": results})
 
 
@@ -34,6 +35,7 @@ if __name__ == "__main__":
         "data_file_path": data_file_path,
         "demographic_attributes": [],
         "questions": [],
+        "survey_context": "INSERT CONTEXT HERE",
         "openai_key": "",
     }
     main(input_data)
