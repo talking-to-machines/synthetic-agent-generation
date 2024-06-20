@@ -1,8 +1,8 @@
 from flask import Flask, request, jsonify
 import os
-from src.data_processing import load_data, clean_data
+from src.data_processing import load_data, clean_data, merge_prompts_with_responses
 from src.prompt_generation import generate_prompts
-from src.api_interaction import query_llm
+from src.api_interaction import batch_query
 from src.evaluation import evaluate_responses
 
 
@@ -12,7 +12,7 @@ def main(request):
     data = clean_data(data, request["demographic_attributes"] + request["questions"])
 
     # Generate prompts
-    prompts = generate_prompts(
+    batch_file_dir, prompts = generate_prompts(
         data,
         request["survey_context"],
         request["demographic_attributes"],
@@ -20,10 +20,13 @@ def main(request):
     )
 
     # Get LLM responses
-    prompts_with_response = query_llm(prompts)
+    responses = batch_query(batch_file_dir)
+
+    # Merge LLM responses with prompts
+    prompts_with_responses = merge_prompts_with_responses(prompts, responses)
 
     # Evaluate responses
-    results = evaluate_responses(prompts_with_response)
+    results = evaluate_responses(prompts_with_responses)
 
     return jsonify({"Evaluation Results": results})
 

@@ -1,37 +1,56 @@
-import openai
 import pandas as pd
+import os
+import time
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ.get("OPENAI_API_KEY"),
+)
 
 
-def query_llm(prompts: pd.DataFrame) -> pd.DataFrame:
+def batch_query(batch_file_dir: str) -> pd.DataFrame:
     """
-    Query the LLM with prompts and return the responses.
+    Query the LLM using batch processing and return the responses after completion.
 
     Parameters:
-    prompts (pd.DataFrame): The prompts to query the LLM with.
+    batch_file_dir (str): The directory containing the batch input file.
 
     Returns:
     pd.DataFrame: The prompts with the corresponding LLM responses.
     """
-    responses = []
-    for prompt in prompts["prompt"]:
-        response = query(prompt)
-        responses.append(response)
+    # Upload batch input file
+    batch_file = client.files.create(file=open(batch_file_dir, "rb"), purpose="batch")
 
-    prompts["response"] = responses
+    # Create batch job
+    batch_job = client.batches.create(
+        input_file_id=batch_file.id,
+        endpoint="/v1/chat/completions",
+        completion_window="24h",
+    )
 
-    return prompts
+    # Check batch status
+    while True:
+        batch_job = client.batches.retrieve(batch_job.id)
+        print(f"Batch job status: {batch_job.status}")
+        if batch_job.status == "completed":
+            break
+        else:
+            # Wait for 10 minutes before checking again
+            time.sleep(600)
 
+    # Retrieve batch results
+    result_file_id = batch_job.output_file_id
+    results = client.files.content(result_file_id).content
 
-def query(prompt: str, model: str = "gpt-4") -> str:
-    """
-    Call the OpenAI API with a prompt.
+    response_list = []
+    for result in results:
+        response_list.append(
+            {
+                "task_index": result["custom_id"].split("-")[-1],
+                "response": result["response"]["body"]["choices"][0]["message"][
+                    "content"
+                ],
+            }
+        )
 
-    Parameters:
-    prompt (str): The prompt to query the LLM with.
-    model (str): The model version.
-
-    Returns:
-    str: The response from the LLM.
-    """
-    response = openai.Completion.create(engine=model, prompt=prompt, max_tokens=150)
-    return response["choices"][0]["text"]
+    return pd.DataFrame(response_list)

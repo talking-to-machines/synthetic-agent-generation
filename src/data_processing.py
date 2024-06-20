@@ -38,3 +38,21 @@ def clean_data(data: pd.DataFrame, relevant_columns: list) -> pd.DataFrame:
     data.dropna(subset=relevant_columns, inplace=True)
 
     return data
+
+
+def merge_prompts_with_responses(
+    prompts: pd.DataFrame, responses: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Merge prompts with responses based on the 'task_index' column.
+
+    Parameters:
+        prompts (pd.DataFrame): The DataFrame containing prompts.
+        responses (pd.DataFrame): The DataFrame containing LLM responses.
+
+    Returns:
+        pd.DataFrame: The merged DataFrame containing prompts with corresponding responses.
+    """
+    prompts_with_response = pd.merge(left=prompts, right=responses, on="task_index")
+
+    return prompts_with_response
