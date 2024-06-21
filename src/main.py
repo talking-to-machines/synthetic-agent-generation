@@ -1,26 +1,44 @@
 from flask import Flask, request, jsonify
 import os
-from src.data_processing import load_data, clean_data, merge_prompts_with_responses
+from src.data_processing import (
+    load_data,
+    clean_data,
+    merge_prompts_with_responses,
+    create_batch_file,
+)
 from src.prompt_generation import generate_prompts
-from src.api_interaction import batch_query
+from src.api_interaction import query_llm
 from src.evaluation import evaluate_responses
+from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()  # This loads the environment variables from .env.
 
 
 def main(request):
+    # Load OpenAI client
+    client = OpenAI(
+        api_key=os.environ.get("OPENAI_API_KEY"),
+    )
+
     # Load and preprocess data
     data = load_data(data_file_path)
     data = clean_data(data, request["demographic_attributes"] + request["questions"])
 
     # Generate prompts
-    batch_file_dir, prompts = generate_prompts(
+    prompts = generate_prompts(
+        client,
         data,
         request["survey_context"],
         request["demographic_attributes"],
         request["questions"],
     )
 
+    # Create JSONL batch file
+    batch_file_dir = create_batch_file(prompts)
+
     # Get LLM responses
-    responses = batch_query(batch_file_dir)
+    responses = query_llm(client, batch_file_dir)
 
     # Merge LLM responses with prompts
     prompts_with_responses = merge_prompts_with_responses(prompts, responses)

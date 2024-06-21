@@ -1,5 +1,6 @@
 import pandas as pd
-import numpy as np
+import json
+import os
 
 
 def load_data(filepath: str) -> pd.DataFrame:
@@ -44,7 +45,7 @@ def merge_prompts_with_responses(
     prompts: pd.DataFrame, responses: pd.DataFrame
 ) -> pd.DataFrame:
     """
-    Merge prompts with responses based on the 'task_index' column.
+    Merge prompts with responses based on the 'custom_id' column.
 
     Parameters:
         prompts (pd.DataFrame): The DataFrame containing prompts.
@@ -53,6 +54,45 @@ def merge_prompts_with_responses(
     Returns:
         pd.DataFrame: The merged DataFrame containing prompts with corresponding responses.
     """
-    prompts_with_response = pd.merge(left=prompts, right=responses, on="task_index")
+    prompts_with_response = pd.merge(left=prompts, right=responses, on="custom_id")
 
     return prompts_with_response
+
+
+def create_batch_file(prompts: pd.DataFrame) -> str:
+    """
+    Create a JSONL batch file from the prompts DataFrame.
+
+    Parameters:
+        prompts (pd.DataFrame): The DataFrame containing prompts.
+
+    Returns:
+        str: The path to the created JSONL batch file.
+    """
+    # Creating an array of json tasks
+    tasks = []
+    for i in range(len(prompts)):
+        task = {
+            "custom_id": prompts.loc[i, "custom_id"],
+            "method": "POST",
+            "url": "/v1/chat/completions",
+            "body": {
+                "model": "gpt-4-turbo",
+                "temperature": 0.1,
+                "response_format": {"type": "json_object"},
+                "messages": [
+                    {"role": "system", "content": prompts.loc[i, "system_message"]},
+                    {"role": "user", "content": prompts.loc[i, "user_message"]},
+                ],
+            },
+        }
+        tasks.append(task)
+
+    # Creating batch file
+    current_dir = os.path.dirname(__file__)
+    batch_file_name = os.path.join(current_dir, "../batch_files/batch_tasks.jsonl")
+    with open(batch_file_name, "w") as file:
+        for obj in tasks:
+            file.write(json.dumps(obj) + "\n")
+
+    return batch_file_name

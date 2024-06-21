@@ -3,12 +3,8 @@ import os
 import time
 from openai import OpenAI
 
-client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY"),
-)
 
-
-def batch_query(batch_file_dir: str) -> pd.DataFrame:
+def query_llm(client: OpenAI, batch_file_dir: str) -> pd.DataFrame:
     """
     Query the LLM using batch processing and return the responses after completion.
 
@@ -46,7 +42,7 @@ def batch_query(batch_file_dir: str) -> pd.DataFrame:
     for result in results:
         response_list.append(
             {
-                "task_index": result["custom_id"].split("-")[-1],
+                "custom_id": result["custom_id"],
                 "response": result["response"]["body"]["choices"][0]["message"][
                     "content"
                 ],
