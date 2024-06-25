@@ -1,3 +1,4 @@
+absl-py==2.1.0
 annotated-types==0.7.0
 anyio==4.4.0
 appnope @ file:///home/conda/feedstock_root/build_artifacts/appnope_1707233003401/work
@@ -31,6 +32,7 @@ MarkupSafe==2.1.5
 matplotlib-inline @ file:///home/conda/feedstock_root/build_artifacts/matplotlib-inline_1713250518406/work
 mypy-extensions==1.0.0
 nest_asyncio @ file:///home/conda/feedstock_root/build_artifacts/nest-asyncio_1705850609492/work
+nltk==3.8.1
 numpy==2.0.0
 openai==1.34.0
 openpyxl==3.1.4
@@ -52,6 +54,8 @@ python-dateutil @ file:///home/conda/feedstock_root/build_artifacts/python-dateu
 python-dotenv==1.0.1
 pytz==2024.1
 pyzmq @ file:///Users/runner/miniforge3/conda-bld/pyzmq_1715024401277/work
+regex==2024.5.15
+rouge_score==0.1.2
 scikit-learn==1.5.0
 scipy==1.14.0
 six @ file:///home/conda/feedstock_root/build_artifacts/six_1620240208055/work
