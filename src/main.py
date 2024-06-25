@@ -10,15 +10,13 @@ from src.prompt_generation import generate_prompts
 from src.api_interaction import query_llm
 from src.evaluation import evaluate_responses
 from openai import OpenAI
-from dotenv import load_dotenv
-
-load_dotenv()  # This loads the environment variables from .env.
+from config.settings import OPENAI_API_KEY
 
 
 def main(request):
     # Load OpenAI client
     client = OpenAI(
-        api_key=os.environ.get("OPENAI_API_KEY"),
+        api_key=OPENAI_API_KEY,
     )
 
     # Load and preprocess data
