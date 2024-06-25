@@ -43,7 +43,7 @@ def query_llm(client: OpenAI, batch_file_dir: str) -> pd.DataFrame:
         response_list.append(
             {
                 "custom_id": result["custom_id"],
-                "response": result["response"]["body"]["choices"][0]["message"][
+                "llm_response": result["response"]["body"]["choices"][0]["message"][
                     "content"
                 ],
             }

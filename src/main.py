@@ -42,9 +42,9 @@ def main(request):
     prompts_with_responses = merge_prompts_with_responses(prompts, responses)
 
     # Evaluate responses
-    results = evaluate_responses(prompts_with_responses)
+    evaluation_results = evaluate_responses(prompts_with_responses)
 
-    return jsonify({"Evaluation Results": results})
+    return jsonify(evaluation_results)
 
 
 if __name__ == "__main__":
@@ -57,4 +57,5 @@ if __name__ == "__main__":
         "survey_context": "INSERT CONTEXT HERE",
         "openai_key": "",
     }
-    main(input_data)
+    evaluation_results = main(input_data)
+    print(evaluation_results)

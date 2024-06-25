@@ -25,12 +25,13 @@ def generate_prompts(
         demographic_prompt = data.loc[i, 'demographic_prompt']
         system_message = construct_system_message(survey_context, demographic_prompt)
 
-        for col in question_columns:
-            question_prompt = question_prompts[col]
+        for question in question_columns:
+            question_prompt = question_prompts[question]
             prompts.append({
                 "custom_id": custom_id_counter,
                 "system_message": system_message,
-                "user_message": question_prompt
+                "user_message": question_prompt,
+                "user_response": data.loc[i, question]
             })
 
             custom_id_counter += 1
@@ -88,17 +89,17 @@ def construct_question_prompts(questions_df: pd.DataFrame) -> dict:
         question_prompts (dict): A dictionary where the keys are column names and the values are the corresponding question prompts.
     """
     question_prompts = {}
-    for col in questions_df.columns:
-        if questions_df[col].dtype == object:  # String response
-            possible_responses = questions_df[col].unique()
+    for question in questions_df.columns:
+        if questions_df[question].dtype == object:  # String response
+            possible_responses = questions_df[question].unique()
 
             if len(possible_responses) > 1:    
-                question_prompts[col] = f'{col} Please respond with {", ".join([f"{repr(response)}" for response in possible_responses[:-1]])} or {repr(possible_responses[-1])}:'
+                question_prompts[question] = f'{question} Please respond with {", ".join([f"{repr(response)}" for response in possible_responses[:-1]])} or {repr(possible_responses[-1])}:'
             else:
-                question_prompts[col] = f'{col} Please respond with {repr(possible_responses[0])}:'
+                question_prompts[question] = f'{question} Please respond with {repr(possible_responses[0])}:'
 
         else:  # Numeric responses
-            question_prompts[col] = f'{col} Please respond with a numerical number:'
+            question_prompts[question] = f'{question} Please respond with a numerical number:'
 
     return question_prompts
 
