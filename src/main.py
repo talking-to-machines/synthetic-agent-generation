@@ -44,12 +44,19 @@ def main(request):
     # Evaluate responses
     evaluation_results = evaluate_responses(prompts_with_responses)
 
-    return jsonify(evaluation_results)
+    return jsonify(evaluation_results), prompts_with_responses
 
 
 if __name__ == "__main__":
+    version = "v1"
     current_dir = os.path.dirname(__file__)
     data_file_path = os.path.join(current_dir, "../data/ghana_wave_2_sample.xlsx")
+    evaluation_result_file_path = os.path.join(
+        current_dir, f"../results/evaluation_results_{version}.txt"
+    )
+    prompts_response_file_path = os.path.join(
+        current_dir, f"../results/prompt_with_response_{version}.xlsx"
+    )
     input_data = {
         "data_file_path": data_file_path,
         "demographic_attributes": [],
@@ -57,5 +64,11 @@ if __name__ == "__main__":
         "survey_context": "INSERT CONTEXT HERE",
         "openai_key": "",
     }
-    evaluation_results = main(input_data)
-    print(evaluation_results)
+    evaluation_results, prompts_with_responses = main(input_data)
+
+    # Save evaluation results
+    with open(evaluation_result_file_path, "w") as file:
+        file.write(str(evaluation_results))
+
+    # Save prompts with responses into Excel file
+    prompts_with_responses.to_excel(prompts_response_file_path, index=False)

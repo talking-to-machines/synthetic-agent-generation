@@ -96,3 +96,23 @@ def create_batch_file(prompts: pd.DataFrame) -> str:
             file.write(json.dumps(obj) + "\n")
 
     return batch_file_name
+
+
+def is_categorical(responses: pd.Series) -> bool:
+    """
+    Determines whether a given series of responses is categorical or free text.
+
+    Parameters:
+        responses (pd.Series): A pandas Series containing the responses.
+
+    Returns:
+        bool: True if the series is categorical, False otherwise.
+    """
+    # Calculate the ratio of unique values to the total number of values
+    unique_ratio = responses.nunique() / len(responses)
+
+    # Heuristic: if the unique ratio is low, it's likely categorical
+    if unique_ratio < 0.2:
+        return True
+    else:
+        return False

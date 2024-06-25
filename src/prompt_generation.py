@@ -1,5 +1,6 @@
 import pandas as pd
 from openai import OpenAI
+from src.data_processing import is_categorical
 
 
 def generate_prompts(
@@ -30,7 +31,7 @@ def generate_prompts(
             prompts.append({
                 "custom_id": custom_id_counter,
                 "system_message": system_message,
-                "user_message": question_prompt,
+                "question": question_prompt,
                 "user_response": data.loc[i, question]
             })
 
@@ -90,7 +91,13 @@ def construct_question_prompts(questions_df: pd.DataFrame) -> dict:
     """
     question_prompts = {}
     for question in questions_df.columns:
-        if questions_df[question].dtype == object:  # String response
+
+        if questions_df[question].dtype == 'int64' or questions_df[question].dtype == 'float64':
+            # Numeric responses
+            question_prompts[question] = f'{question} Please respond with a numerical number:'
+
+        elif is_categorical(questions_df[question]):
+            # Cateogrical responses
             possible_responses = questions_df[question].unique()
 
             if len(possible_responses) > 1:    
@@ -98,8 +105,9 @@ def construct_question_prompts(questions_df: pd.DataFrame) -> dict:
             else:
                 question_prompts[question] = f'{question} Please respond with {repr(possible_responses[0])}:'
 
-        else:  # Numeric responses
-            question_prompts[question] = f'{question} Please respond with a numerical number:'
+        else:  
+            # Free text responses
+            question_prompts[question] = f'{question} Please respond as free text in a concise manner:'
 
     return question_prompts
 

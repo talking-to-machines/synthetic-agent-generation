@@ -24,6 +24,7 @@ ipython @ file:///home/conda/feedstock_root/build_artifacts/ipython_171718274206
 itsdangerous==2.2.0
 jedi @ file:///home/conda/feedstock_root/build_artifacts/jedi_1696326070614/work
 Jinja2==3.1.4
+joblib==1.4.2
 jupyter_client @ file:///home/conda/feedstock_root/build_artifacts/jupyter_client_1716472197302/work
 jupyter_core @ file:///Users/runner/miniforge3/conda-bld/jupyter_core_1710257537977/work
 MarkupSafe==2.1.5
@@ -51,9 +52,12 @@ python-dateutil @ file:///home/conda/feedstock_root/build_artifacts/python-dateu
 python-dotenv==1.0.1
 pytz==2024.1
 pyzmq @ file:///Users/runner/miniforge3/conda-bld/pyzmq_1715024401277/work
+scikit-learn==1.5.0
+scipy==1.14.0
 six @ file:///home/conda/feedstock_root/build_artifacts/six_1620240208055/work
 sniffio==1.3.1
 stack-data @ file:///home/conda/feedstock_root/build_artifacts/stack_data_1669632077133/work
+threadpoolctl==3.5.0
 tornado @ file:///Users/runner/miniforge3/conda-bld/tornado_1717722763027/work
 tqdm==4.66.4
 traitlets @ file:///home/conda/feedstock_root/build_artifacts/traitlets_1713535121073/work
