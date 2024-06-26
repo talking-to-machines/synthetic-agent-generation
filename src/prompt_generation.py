@@ -14,7 +14,9 @@ def generate_prompts(
     Generate prompts from the survey data.
     """
     # Generate prompts for demographic information
-    data['demographic_prompt'] = data[demographic_columns].apply(construct_demographic_prompts, args=(client,), axis=1)
+    data["demographic_prompt"] = data[demographic_columns].apply(
+        construct_demographic_prompts, args=(client,), axis=1
+    )
 
     # Generate prompts for survey questions
     question_prompts = construct_question_prompts(data[question_columns])
@@ -23,17 +25,19 @@ def generate_prompts(
     prompts = []
     custom_id_counter = 0
     for i in range(len(data)):
-        demographic_prompt = data.loc[i, 'demographic_prompt']
+        demographic_prompt = data.loc[i, "demographic_prompt"]
         system_message = construct_system_message(survey_context, demographic_prompt)
 
         for question in question_columns:
             question_prompt = question_prompts[question]
-            prompts.append({
-                "custom_id": custom_id_counter,
-                "system_message": system_message,
-                "question": question_prompt,
-                "user_response": data.loc[i, question]
-            })
+            prompts.append(
+                {
+                    "custom_id": f"{custom_id_counter}",
+                    "system_message": system_message,
+                    "question": question_prompt,
+                    "user_response": data.loc[i, question],
+                }
+            )
 
             custom_id_counter += 1
     return pd.DataFrame(prompts)
@@ -55,11 +59,14 @@ def construct_demographic_prompts(demographic_info: pd.Series, client: OpenAI) -
     completion = client.chat.completions.create(
         model="gpt-4-turbo",
         messages=[
-            {"role": "system", "content": "Based on the following survey response from a subject, generate statements describing the subject and start every sentence with 'You'. Write it as a single paragraph and do not mention about the survey."},
-            {"role": "user", "content": f"{survey_response}"}
-        ]
+            {
+                "role": "system",
+                "content": "Based on the following survey response from a subject, generate statements describing the subject and start every sentence with 'You'. Write it as a single paragraph and do not mention about the survey.",
+            },
+            {"role": "user", "content": f"{survey_response}"},
+        ],
     )
-    return completion.choices[0].message
+    return completion.choices[0].message.content
 
 
 def format_survey_response(demographic_info: pd.Series) -> str:
@@ -92,22 +99,34 @@ def construct_question_prompts(questions_df: pd.DataFrame) -> dict:
     question_prompts = {}
     for question in questions_df.columns:
 
-        if questions_df[question].dtype == 'int64' or questions_df[question].dtype == 'float64':
+        if (
+            questions_df[question].dtype == "int64"
+            or questions_df[question].dtype == "float64"
+            or pd.to_numeric(questions_df[question], errors="coerce").notnull().all()
+        ):
             # Numeric responses
-            question_prompts[question] = f'{question} Please respond with a numerical number:'
+            question_prompts[question] = (
+                f"{question} Please respond with a numerical number no matter what:"
+            )
 
         elif is_categorical(questions_df[question]):
             # Cateogrical responses
             possible_responses = questions_df[question].unique()
 
-            if len(possible_responses) > 1:    
-                question_prompts[question] = f'{question} Please respond with {", ".join([f"{repr(response)}" for response in possible_responses[:-1]])} or {repr(possible_responses[-1])}:'
+            if len(possible_responses) > 1:
+                question_prompts[question] = (
+                    f'{question} Please respond with {", ".join([f"{repr(response)}" for response in possible_responses[:-1]])} or {repr(possible_responses[-1])}:'
+                )
             else:
-                question_prompts[question] = f'{question} Please respond with {repr(possible_responses[0])}:'
+                question_prompts[question] = (
+                    f"{question} Please respond with {repr(possible_responses[0])}:"
+                )
 
-        else:  
+        else:
             # Free text responses
-            question_prompts[question] = f'{question} Please respond as free text in a concise manner:'
+            question_prompts[question] = (
+                f"{question} Please respond as free text in a concise manner:"
+            )
 
     return question_prompts
 
@@ -123,7 +142,4 @@ def construct_system_message(survey_context: str, demographic_prompt: str) -> st
     Returns:
         str: The constructed prompt.
     """
-    return f"
-    {survey_context} \n\n
-    {demographic_prompt}
-    "
+    return f"{survey_context} \n\n {demographic_prompt}"

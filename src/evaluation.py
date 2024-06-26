@@ -29,6 +29,9 @@ def evaluate_responses(prompts_with_responses: pd.DataFrame) -> dict:
         if (
             question_responses["user_response"].dtype == "int64"
             or question_responses["user_response"].dtype == "float64"
+            or pd.to_numeric(question_responses["user_response"], errors="coerce")
+            .notnull()
+            .all()
         ):
             # Numerical evaluation
             response_type = "Numerical"
@@ -109,14 +112,18 @@ def evaluate_numerical_response(
     Returns:
         dict: A dictionary containing the evaluation metrics.
     """
+    # Convert user_response and llm_response to float type
+    user_response = user_response.astype(float)
+    llm_response = llm_response.astype(float)
+
     # Calculate mean absolute error
-    mae = np.mean(np.abs(user_response - llm_response))
+    mae = np.mean(np.abs(user_response - llm_response)).item()
 
     # Calculate root mean squared error
-    rmse = np.sqrt(np.mean((user_response - llm_response) ** 2))
+    rmse = np.sqrt(np.mean((user_response - llm_response) ** 2)).item()
 
     # Calculate mean absolute percentage error
-    mape = np.mean(np.abs((user_response - llm_response) / user_response)) * 100
+    mape = np.mean(np.abs((user_response - llm_response) / user_response)).item() * 100
 
     return {
         "mean_absolute_error": mae,

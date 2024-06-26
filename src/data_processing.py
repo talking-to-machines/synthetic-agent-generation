@@ -73,16 +73,16 @@ def create_batch_file(prompts: pd.DataFrame) -> str:
     tasks = []
     for i in range(len(prompts)):
         task = {
-            "custom_id": prompts.loc[i, "custom_id"],
+            "custom_id": f'{prompts.loc[i, "custom_id"]}',
             "method": "POST",
             "url": "/v1/chat/completions",
             "body": {
                 "model": "gpt-4-turbo",
                 "temperature": 0.1,
-                "response_format": {"type": "json_object"},
+                # "response_format": {"type": "json_object"},
                 "messages": [
                     {"role": "system", "content": prompts.loc[i, "system_message"]},
-                    {"role": "user", "content": prompts.loc[i, "user_message"]},
+                    {"role": "user", "content": prompts.loc[i, "question"]},
                 ],
             },
         }
@@ -112,7 +112,7 @@ def is_categorical(responses: pd.Series) -> bool:
     unique_ratio = responses.nunique() / len(responses)
 
     # Heuristic: if the unique ratio is low, it's likely categorical
-    if unique_ratio < 0.2:
+    if unique_ratio < 0.5:
         return True
     else:
         return False

@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import time
+import json
 from openai import OpenAI
 
 
@@ -31,22 +32,33 @@ def query_llm(client: OpenAI, batch_file_dir: str) -> pd.DataFrame:
         if batch_job.status == "completed":
             break
         else:
-            # Wait for 10 minutes before checking again
-            time.sleep(600)
+            # Wait for 5 minutes before checking again
+            # time.sleep(300)
+            time.sleep(60)
 
     # Retrieve batch results
     result_file_id = batch_job.output_file_id
     results = client.files.content(result_file_id).content
 
+    # Save the batch output
+    current_dir = os.path.dirname(__file__)
+    batch_output_dir = os.path.join(current_dir, "../batch_files/batch_output.jsonl")
+    with open(batch_output_dir, "wb") as file:
+        file.write(results)
+
+    # Loading data from saved output file
     response_list = []
-    for result in results:
-        response_list.append(
-            {
-                "custom_id": result["custom_id"],
-                "llm_response": result["response"]["body"]["choices"][0]["message"][
-                    "content"
-                ],
-            }
-        )
+    with open(batch_output_dir, "r") as file:
+        for line in file:
+            # Parsing the JSON result string into a dict
+            result = json.loads(line.strip())
+            response_list.append(
+                {
+                    "custom_id": f'{result["custom_id"]}',
+                    "llm_response": result["response"]["body"]["choices"][0]["message"][
+                        "content"
+                    ],
+                }
+            )
 
     return pd.DataFrame(response_list)
