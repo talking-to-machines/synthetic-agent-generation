@@ -79,16 +79,16 @@ def evaluate_categorical_response(
     accuracy = accuracy_score(user_response, llm_response)
 
     # Calculate F1 score
-    f1 = f1_score(user_response, llm_response, average="macro")
+    f1 = float(f1_score(user_response, llm_response, average="macro"))
 
     # Calculate Matthews correlation coefficient
-    mcc = matthews_corrcoef(user_response, llm_response)
+    mcc = float(matthews_corrcoef(user_response, llm_response))
 
     # Calculate Cramer's V correlation
     contingency_table = pd.crosstab(user_response, llm_response)
     chi2, _, _, _ = chi2_contingency(contingency_table)
     n = contingency_table.sum().sum()
-    cramer_v = np.sqrt(chi2 / (n * (min(contingency_table.shape) - 1)))
+    cramer_v = float(np.sqrt(chi2 / (n * (min(contingency_table.shape) - 1))))
 
     return {
         "accuracy": accuracy,
@@ -117,13 +117,13 @@ def evaluate_numerical_response(
     llm_response = llm_response.astype(float)
 
     # Calculate mean absolute error
-    mae = np.mean(np.abs(user_response - llm_response)).item()
+    mae = float(np.mean(np.abs(user_response - llm_response)))
 
     # Calculate root mean squared error
-    rmse = np.sqrt(np.mean((user_response - llm_response) ** 2)).item()
+    rmse = float(np.sqrt(np.mean((user_response - llm_response) ** 2)))
 
     # Calculate mean absolute percentage error
-    mape = np.mean(np.abs((user_response - llm_response) / user_response)).item() * 100
+    mape = float(np.mean(np.abs((user_response - llm_response) / user_response))) * 100
 
     return {
         "mean_absolute_error": mae,
