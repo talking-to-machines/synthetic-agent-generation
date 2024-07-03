@@ -5,19 +5,23 @@ import json
 from openai import OpenAI
 
 
-def batch_query(client: OpenAI, batch_input_file_dir: str, batch_output_file_dir: str) -> pd.DataFrame:
+def batch_query(
+    client: OpenAI, batch_input_file_dir: str, batch_output_file_dir: str
+) -> pd.DataFrame:
     """
     Query the LLM using batch processing and return the responses after completion.
 
     Parameters:
-    batch_input_file_dir (str): The directory containing the batch input file.
-    batch_output_file_dir (str): The directory containing the batch output file.
+        batch_input_file_dir (str): The directory containing the batch input file.
+        batch_output_file_dir (str): The directory containing the batch output file.
 
     Returns:
-    pd.DataFrame: The prompts with the corresponding LLM responses.
+        pd.DataFrame: The prompts with the corresponding LLM responses.
     """
     # Upload batch input file
-    batch_file = client.files.create(file=open(batch_input_file_dir, "rb"), purpose="batch")
+    batch_file = client.files.create(
+        file=open(batch_input_file_dir, "rb"), purpose="batch"
+    )
 
     # Create batch job
     batch_job = client.batches.create(
@@ -32,6 +36,8 @@ def batch_query(client: OpenAI, batch_input_file_dir: str, batch_output_file_dir
         print(f"Batch job status: {batch_job.status}")
         if batch_job.status == "completed":
             break
+        elif batch_job.status == "failed":
+            raise Exception("Batch job failed.")
         else:
             # Wait for 5 minutes before checking again
             # time.sleep(300)
@@ -43,7 +49,9 @@ def batch_query(client: OpenAI, batch_input_file_dir: str, batch_output_file_dir
 
     # Save the batch output
     current_dir = os.path.dirname(__file__)
-    batch_output_dir = os.path.join(current_dir, f"../batch_files/{batch_output_file_dir}")
+    batch_output_dir = os.path.join(
+        current_dir, f"../batch_files/{batch_output_file_dir}"
+    )
     with open(batch_output_dir, "wb") as file:
         file.write(results)
 
@@ -56,9 +64,9 @@ def batch_query(client: OpenAI, batch_input_file_dir: str, batch_output_file_dir
             response_list.append(
                 {
                     "custom_id": f'{result["custom_id"]}',
-                    "query_response": result["response"]["body"]["choices"][0]["message"][
-                        "content"
-                    ],
+                    "query_response": result["response"]["body"]["choices"][0][
+                        "message"
+                    ]["content"],
                 }
             )
 

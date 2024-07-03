@@ -6,6 +6,7 @@ from src.data_processing import (
 )
 from src.api_interaction import batch_query
 
+
 def generate_prompts(
     client: OpenAI,
     data: pd.DataFrame,
@@ -13,13 +14,17 @@ def generate_prompts(
     survey_questions: list,
 ) -> pd.DataFrame:
     """
-    Generate demographic prompts from the survey data.
-    """
-    # Generate prompts for demographic information
-    # data["demographic_prompt"] = data[demographic_columns].apply(
-    #     construct_demographic_prompts, args=(client,), axis=1
-    # )
+    Generate prompts for survey questions.
 
+    Parameters:
+        client (OpenAI): The OpenAI client object.
+        data (pd.DataFrame): The survey data.
+        survey_context (str): The context of the survey.
+        survey_questions (list): The list of survey questions.
+
+    Returns:
+        pd.DataFrame: The prompts generated for each question for each user.
+    """
     # Generate prompts for survey questions
     question_prompts = construct_question_prompts(data[survey_questions])
 
@@ -28,12 +33,26 @@ def generate_prompts(
     custom_id_counter = 0
     for i in range(len(data)):
         for question in survey_questions:
+            if pd.isnull(data.loc[i, question]):
+                continue
+
             prompts.append(
                 {
                     "custom_id": f"{custom_id_counter}",
-                    "user_id": data.loc[i, 'ID'],
+                    "user_id": data.loc[i, "ID"],
                     "survey_context": survey_context,
-                    "demographic_info_qna": generate_qna_format(data.loc[i, [demo_question for demo_question in survey_questions if demo_question != question]]),
+                    "system_message_demographic_summarise": "Based on the following survey response from a subject, generate statements describing the subject and start every sentence with 'You'. Write it as a single paragraph and do not mention about the survey.",
+                    "demographic_info_qna": generate_qna_format(
+                        data.loc[
+                            i,
+                            [
+                                demo_question
+                                for demo_question in survey_questions
+                                if demo_question != question
+                            ],
+                        ]
+                    ),
+                    "question": question,
                     "question_prompt": question_prompts[question],
                     "user_response": data.loc[i, question],
                 }
@@ -42,62 +61,35 @@ def generate_prompts(
     prompts = pd.DataFrame(prompts)
 
     # Create JSONL batch file
-    batch_file_dir = create_batch_file(prompts, question_field='demographic_info_qna', batch_file_name='batch_tasks_demographic_info.jsonl')
+    batch_file_dir = create_batch_file(
+        prompts,
+        system_message_field="system_message_demographic_summarise",
+        user_message_field="demographic_info_qna",
+        batch_file_name="batch_input_demographic_info.jsonl",
+    )
 
     # Get processed demographic information from batch query
-    responses = batch_query(client, batch_file_dir)
-    responses.rename(columns={'query_response': 'demographic_prompt'}, inplace=True)
+    processed_demographic_prompts = batch_query(
+        client,
+        batch_input_file_dir=batch_file_dir,
+        batch_output_file_dir="batch_output_demographic_info",
+    )
+    processed_demographic_prompts.rename(
+        columns={"query_response": "demographic_prompt"}, inplace=True
+    )
 
     # Merge processed demographic information with prompts
-    prompts = merge_prompts_with_responses(prompts, responses)
+    prompts = merge_prompts_with_responses(prompts, processed_demographic_prompts)
 
     # Construct system message using survey context and demographic prompt
-    prompts['system_message'] = prompts.apply(lambda row: construct_system_message(row['survey_context'], row['demographic_prompt']), axis=1)
+    prompts["system_message"] = prompts.apply(
+        lambda row: construct_system_message(
+            row["survey_context"], row["demographic_prompt"]
+        ),
+        axis=1,
+    )
 
     return prompts
-
-        # demographic_prompt = data.loc[i, "demographic_prompt"]
-        # system_message = construct_system_message(survey_context, demographic_prompt)
-
-        # for question in question_columns:
-        #     question_prompt = question_prompts[question]
-        #     prompts.append(
-        #         {
-        #             "custom_id": f"{custom_id_counter}",
-        #             "system_message": system_message,
-        #             "question": question_prompt,
-        #             "user_response": data.loc[i, question],
-        #         }
-        #     )
-
-
-    # return pd.DataFrame(prompts)
-
-
-# def construct_demographic_prompts(demographic_info: pd.Series, client: OpenAI) -> str:
-#     """
-#     Constructs prompts for generating statements describing a subject based on their demographic information.
-
-#     Parameters:
-#         demographic_info (pd.Series): A pandas Series containing the demographic information of the subject.
-#         client (OpenAI): An instance of the OpenAI client.
-
-#     Returns:
-#         str: The generated prompts as a single paragraph.
-#     """
-#     survey_response = format_survey_response(demographic_info)
-
-#     completion = client.chat.completions.create(
-#         model="gpt-4-turbo",
-#         messages=[
-#             {
-#                 "role": "system",
-#                 "content": "Based on the following survey response from a subject, generate statements describing the subject and start every sentence with 'You'. Write it as a single paragraph and do not mention about the survey.",
-#             },
-#             {"role": "user", "content": f"{survey_response}"},
-#         ],
-#     )
-#     return completion.choices[0].message.content
 
 
 def generate_qna_format(demographic_info: pd.Series) -> str:

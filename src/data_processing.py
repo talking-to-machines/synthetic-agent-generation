@@ -8,10 +8,10 @@ def load_data(filepath: str) -> pd.DataFrame:
     Load the survey data (in either CSV format or Excel format) from a filepath.
 
     Parameters:
-    filepath (str): The path to the survey data file.
+        filepath (str): The path to the survey data file.
 
     Returns:
-    pd.DataFrame: The survey data.
+        pd.DataFrame: The survey data.
     """
     if filepath.endswith(".csv"):
         return pd.read_csv(filepath)
@@ -26,11 +26,11 @@ def clean_data(data: pd.DataFrame, relevant_columns: list) -> pd.DataFrame:
     Clean the survey data of any duplicated records.
 
     Parameters:
-    data (pd.DataFrame): The survey data.
-    relevant_columns (list): The list of columns to consider when cleaning the data.
+        data (pd.DataFrame): The survey data.
+        relevant_columns (list): The list of columns to consider when cleaning the data.
 
     Returns:
-    pd.DataFrame: The cleaned survey data.
+        pd.DataFrame: The cleaned survey data.
     """
     # Remove duplicated records
     data.drop_duplicates(subset=relevant_columns, inplace=True)
@@ -56,7 +56,12 @@ def merge_prompts_with_responses(
     return prompts_with_response
 
 
-def create_batch_file(prompts: pd.DataFrame, question_field: str='question_prompt', batch_file_name: str='batch_tasks.jsonl') -> str:
+def create_batch_file(
+    prompts: pd.DataFrame,
+    system_message_field: str,
+    user_message_field: str = "question_prompt",
+    batch_file_name: str = "batch_tasks.jsonl",
+) -> str:
     """
     Create a JSONL batch file from the prompts DataFrame.
 
@@ -78,8 +83,8 @@ def create_batch_file(prompts: pd.DataFrame, question_field: str='question_promp
                 "model": "gpt-4-turbo",
                 "temperature": 0,
                 "messages": [
-                    {"role": "system", "content": prompts.loc[i, "system_message"]},
-                    {"role": "user", "content": prompts.loc[i, question_field]},
+                    {"role": "system", "content": prompts.loc[i, system_message_field]},
+                    {"role": "user", "content": prompts.loc[i, user_message_field]},
                 ],
             },
         }
@@ -93,23 +98,3 @@ def create_batch_file(prompts: pd.DataFrame, question_field: str='question_promp
             file.write(json.dumps(obj) + "\n")
 
     return batch_file_name
-
-
-def is_categorical(responses: pd.Series) -> bool:
-    """
-    Determines whether a given series of responses is categorical or free text.
-
-    Parameters:
-        responses (pd.Series): A pandas Series containing the responses.
-
-    Returns:
-        bool: True if the series is categorical, False otherwise.
-    """
-    # Calculate the ratio of unique values to the total number of values
-    unique_ratio = responses.nunique() / len(responses)
-
-    # Heuristic: if the unique ratio is low, it's likely categorical
-    if unique_ratio < 0.5:
-        return True
-    else:
-        return False
