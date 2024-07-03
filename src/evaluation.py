@@ -1,12 +1,12 @@
 import pandas as pd
 import numpy as np
-import nltk
+# import nltk
 from sklearn.metrics import accuracy_score
-from src.data_processing import is_categorical
+# from src.data_processing import is_categorical
 from sklearn.metrics import accuracy_score, f1_score, matthews_corrcoef
 from scipy.stats import chi2_contingency
-from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
-from rouge_score import rouge_scorer
+# from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
+# from rouge_score import rouge_scorer
 
 
 def evaluate_responses(prompts_with_responses: pd.DataFrame) -> dict:
@@ -39,17 +39,10 @@ def evaluate_responses(prompts_with_responses: pd.DataFrame) -> dict:
                 question_responses["user_response"], question_responses["llm_response"]
             )
 
-        elif is_categorical(question_responses["user_response"]):
+        else:
             # Categorical evaluation
             response_type = "Categorical"
             evaluation_result = evaluate_categorical_response(
-                question_responses["user_response"], question_responses["llm_response"]
-            )
-
-        else:
-            # Free text evaluation
-            response_type = "Free Text"
-            evaluation_result = evaluate_free_text_response(
                 question_responses["user_response"], question_responses["llm_response"]
             )
 
@@ -132,60 +125,60 @@ def evaluate_numerical_response(
     }
 
 
-def evaluate_free_text_response(
-    user_response: pd.Series, llm_response: pd.Series
-) -> dict:
-    """
-    Evaluate the LLM's ability to predict the user's free text response in terms of
-    BLEU score and ROUGE score.
+# def evaluate_free_text_response(
+#     user_response: pd.Series, llm_response: pd.Series
+# ) -> dict:
+#     """
+#     Evaluate the LLM's ability to predict the user's free text response in terms of
+#     BLEU score and ROUGE score.
 
-    Parameters:
-        user_response (pd.Series): A pandas Series containing the user's responses.
-        llm_response (pd.Series): A pandas Series containing the LLM's responses.
+#     Parameters:
+#         user_response (pd.Series): A pandas Series containing the user's responses.
+#         llm_response (pd.Series): A pandas Series containing the LLM's responses.
 
-    Returns:
-        dict: A dictionary containing the evaluation metrics.
-    """
-    nltk.download("punkt")
+#     Returns:
+#         dict: A dictionary containing the evaluation metrics.
+#     """
+#     nltk.download("punkt")
 
-    # Initialize ROUGE scorer
-    rouge = rouge_scorer.RougeScorer(["rouge1", "rouge2", "rougeL"], use_stemmer=True)
+#     # Initialize ROUGE scorer
+#     rouge = rouge_scorer.RougeScorer(["rouge1", "rouge2", "rougeL"], use_stemmer=True)
 
-    # Initialize BLEU components
-    smoothing_function = SmoothingFunction().method1
+#     # Initialize BLEU components
+#     smoothing_function = SmoothingFunction().method1
 
-    # Containers for scores
-    bleu_scores = []
-    rouge1_scores = []
-    rouge2_scores = []
-    rougeL_scores = []
+#     # Containers for scores
+#     bleu_scores = []
+#     rouge1_scores = []
+#     rouge2_scores = []
+#     rougeL_scores = []
 
-    for ref_text, cand_text in zip(user_response, llm_response):
-        # Tokenize texts for BLEU
-        ref_tokens = nltk.word_tokenize(ref_text.lower())
-        cand_tokens = nltk.word_tokenize(cand_text.lower())
+#     for ref_text, cand_text in zip(user_response, llm_response):
+#         # Tokenize texts for BLEU
+#         ref_tokens = nltk.word_tokenize(ref_text.lower())
+#         cand_tokens = nltk.word_tokenize(cand_text.lower())
 
-        # Calculate BLEU score
-        bleu_score = sentence_bleu(
-            [ref_tokens], cand_tokens, smoothing_function=smoothing_function
-        )
-        bleu_scores.append(bleu_score)
+#         # Calculate BLEU score
+#         bleu_score = sentence_bleu(
+#             [ref_tokens], cand_tokens, smoothing_function=smoothing_function
+#         )
+#         bleu_scores.append(bleu_score)
 
-        # Calculate ROUGE scores
-        rouge_scores = rouge.score(ref_text, cand_text)
-        rouge1_scores.append(rouge_scores["rouge1"].fmeasure)
-        rouge2_scores.append(rouge_scores["rouge2"].fmeasure)
-        rougeL_scores.append(rouge_scores["rougeL"].fmeasure)
+#         # Calculate ROUGE scores
+#         rouge_scores = rouge.score(ref_text, cand_text)
+#         rouge1_scores.append(rouge_scores["rouge1"].fmeasure)
+#         rouge2_scores.append(rouge_scores["rouge2"].fmeasure)
+#         rougeL_scores.append(rouge_scores["rougeL"].fmeasure)
 
-    # Calculate averages
-    avg_bleu = sum(bleu_scores) / len(bleu_scores) if bleu_scores else 0
-    avg_rouge1 = sum(rouge1_scores) / len(rouge1_scores) if rouge1_scores else 0
-    avg_rouge2 = sum(rouge2_scores) / len(rouge2_scores) if rouge2_scores else 0
-    avg_rougeL = sum(rougeL_scores) / len(rougeL_scores) if rougeL_scores else 0
+#     # Calculate averages
+#     avg_bleu = sum(bleu_scores) / len(bleu_scores) if bleu_scores else 0
+#     avg_rouge1 = sum(rouge1_scores) / len(rouge1_scores) if rouge1_scores else 0
+#     avg_rouge2 = sum(rouge2_scores) / len(rouge2_scores) if rouge2_scores else 0
+#     avg_rougeL = sum(rougeL_scores) / len(rougeL_scores) if rougeL_scores else 0
 
-    return {
-        "average_bleu": avg_bleu,
-        "average_rouge1": avg_rouge1,
-        "average_rouge2": avg_rouge2,
-        "average_rougeL": avg_rougeL,
-    }
+#     return {
+#         "average_bleu": avg_bleu,
+#         "average_rouge1": avg_rouge1,
+#         "average_rouge2": avg_rouge2,
+#         "average_rougeL": avg_rougeL,
+#     }

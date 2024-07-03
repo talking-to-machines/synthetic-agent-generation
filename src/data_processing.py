@@ -23,7 +23,7 @@ def load_data(filepath: str) -> pd.DataFrame:
 
 def clean_data(data: pd.DataFrame, relevant_columns: list) -> pd.DataFrame:
     """
-    Clean the survey data of any duplicated records or records with missing values.
+    Clean the survey data of any duplicated records.
 
     Parameters:
     data (pd.DataFrame): The survey data.
@@ -34,9 +34,6 @@ def clean_data(data: pd.DataFrame, relevant_columns: list) -> pd.DataFrame:
     """
     # Remove duplicated records
     data.drop_duplicates(subset=relevant_columns, inplace=True)
-
-    # Remove records with missing values
-    data.dropna(subset=relevant_columns, inplace=True)
 
     return data
 
@@ -59,12 +56,13 @@ def merge_prompts_with_responses(
     return prompts_with_response
 
 
-def create_batch_file(prompts: pd.DataFrame) -> str:
+def create_batch_file(prompts: pd.DataFrame, question_field: str='question_prompt', batch_file_name: str='batch_tasks.jsonl') -> str:
     """
     Create a JSONL batch file from the prompts DataFrame.
 
     Parameters:
         prompts (pd.DataFrame): The DataFrame containing prompts.
+        batch_file_name (str): The name of the batch file.
 
     Returns:
         str: The path to the created JSONL batch file.
@@ -78,11 +76,10 @@ def create_batch_file(prompts: pd.DataFrame) -> str:
             "url": "/v1/chat/completions",
             "body": {
                 "model": "gpt-4-turbo",
-                "temperature": 0.1,
-                # "response_format": {"type": "json_object"},
+                "temperature": 0,
                 "messages": [
                     {"role": "system", "content": prompts.loc[i, "system_message"]},
-                    {"role": "user", "content": prompts.loc[i, "question"]},
+                    {"role": "user", "content": prompts.loc[i, question_field]},
                 ],
             },
         }
@@ -90,7 +87,7 @@ def create_batch_file(prompts: pd.DataFrame) -> str:
 
     # Creating batch file
     current_dir = os.path.dirname(__file__)
-    batch_file_name = os.path.join(current_dir, "../batch_files/batch_tasks.jsonl")
+    batch_file_name = os.path.join(current_dir, f"../batch_files/{batch_file_name}")
     with open(batch_file_name, "w") as file:
         for obj in tasks:
             file.write(json.dumps(obj) + "\n")

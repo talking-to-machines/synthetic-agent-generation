@@ -7,7 +7,7 @@ from src.data_processing import (
     create_batch_file,
 )
 from src.prompt_generation import generate_prompts
-from src.api_interaction import query_llm
+from src.api_interaction import batch_query
 from src.evaluation import evaluate_responses
 from openai import OpenAI
 from config.settings import OPENAI_API_KEY
@@ -21,25 +21,21 @@ def main(request):
 
     # Load and preprocess data
     data = load_data(data_file_path)
-    data = clean_data(data, request["demographic_attributes"] + request["questions"])
+    data = clean_data(data, request["survey_questions"])
 
-    # Generate prompts
+    # Generate demographic prompts
     prompts = generate_prompts(
         client,
         data,
         request["survey_context"],
-        request["demographic_attributes"],
-        request["questions"],
+        request["survey_questions"],
     )
 
-    # Create JSONL batch file
-    batch_file_dir = create_batch_file(prompts)
-
-    # Get LLM responses
-    responses = query_llm(client, batch_file_dir)
-
-    # Merge LLM responses with prompts
-    prompts_with_responses = merge_prompts_with_responses(prompts, responses)
+    # Perform batch query for survey questions
+    batch_file_dir = create_batch_file(prompts, question_field='question_prompt', batch_file_name='batch_tasks_llm_survey_response.jsonl')
+    llm_survey_responses = batch_query(client, batch_file_dir)
+    llm_survey_responses.rename(columns={'query_response': 'llm_survey_response'}, inplace=True)
+    prompts_with_responses = merge_prompts_with_responses(prompts, llm_survey_responses)
 
     # Evaluate responses
     evaluation_results = evaluate_responses(prompts_with_responses)
@@ -59,22 +55,21 @@ if __name__ == "__main__":
     )
     input_data = {
         "data_file_path": data_file_path,
-        "demographic_attributes": [
-            "Do you come from a rural or urban area?",
-            "What region do you come from?",
-            "What is your gender?",
-            "What is your race?",
-            "What is the primary language you speak in your home?",
-            "What is your highest level of education?",
-            "What is your religion, if any?",
-            "What is your ethnic community or cultural group?",
-        ],
-        "questions": [
-            "If a vaccine for COVID-19 is available , how likely are you to try to get vaccinated?",
-            "How much do you trust the government to ensure that any vaccine for COVID-19 that is developed or offered to Nigerian citizens is safe before it is used in this country?",
-            "Please tell me whether you personally or any other member of your household have became ill with, or tested positive for COVID-19 by the COVID-19 pandemic?",
-            "What is the main reason that you would be unlikely to get a COVID-19 vaccine?",
-            "How old are you?",
+        "survey_questions": [
+            'How old are you?',
+            'What is your gender?',
+            'What is your race?',
+            'What is your highest level of education?',
+            'Do you personally own a mobile phone? If not, does anyone else in your household own one?',
+            'Over the past year, how often, if ever, have you or anyone in your family gone without Medicines or medical treatment?',
+            'In the past 12 months, have you had contact with a public clinic or hospital?',
+            'How easy or difficult was it to obtain the medical care or services you needed?',
+            'Please tell me whether you personally or any other member of your household have became ill with, or tested positive for COVID-19 by the COVID-19 pandemic?',
+            'Please tell me whether you personally or any other member of your household have temporarily or permanently lost a job, business, or primary source of income by the COVID-19 pandemic?',
+            'Have you received a vaccination against COVID-19, either one or two doses?',
+            'If a vaccine for COVID-19 is available , how likely are you to try to get vaccinated?',
+            'What is the main reason that you would be unlikely to get a COVID-19 vaccine?',
+            'How much do you trust the government to ensure that any vaccine for COVID-19 that is developed or offered to Nigerian citizens is safe before it is used in this country?',
         ],
         "survey_context": "This survey is conducted with a Chat GPT agent to explore and analyze responses on various topical social issues. Your participation will help us understand the capabilities and insights of AI in addressing these important topics. Assuming you are the participant of the survey, please review the set of questions and answers and answer to the last question. Please make sure you provide no explanation and you answer using only predefined categories in the question.",
     }
