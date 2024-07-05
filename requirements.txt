@@ -8,6 +8,8 @@ blinker==1.8.2
 certifi==2024.6.2
 click==8.1.7
 comm @ file:///home/conda/feedstock_root/build_artifacts/comm_1710320294760/work
+contourpy==1.2.1
+cycler==0.12.1
 debugpy @ file:///Users/runner/miniforge3/conda-bld/debugpy_1707444470971/work
 decorator @ file:///home/conda/feedstock_root/build_artifacts/decorator_1641555617451/work
 distro==1.9.0
@@ -15,6 +17,7 @@ et-xmlfile==1.1.0
 exceptiongroup @ file:///home/conda/feedstock_root/build_artifacts/exceptiongroup_1704921103267/work
 executing @ file:///home/conda/feedstock_root/build_artifacts/executing_1698579936712/work
 Flask==3.0.3
+fonttools==4.53.1
 h11==0.14.0
 httpcore==1.0.5
 httpx==0.27.0
@@ -28,7 +31,9 @@ Jinja2==3.1.4
 joblib==1.4.2
 jupyter_client @ file:///home/conda/feedstock_root/build_artifacts/jupyter_client_1716472197302/work
 jupyter_core @ file:///Users/runner/miniforge3/conda-bld/jupyter_core_1710257537977/work
+kiwisolver==1.4.5
 MarkupSafe==2.1.5
+matplotlib==3.9.1
 matplotlib-inline @ file:///home/conda/feedstock_root/build_artifacts/matplotlib-inline_1713250518406/work
 mypy-extensions==1.0.0
 nest_asyncio @ file:///home/conda/feedstock_root/build_artifacts/nest-asyncio_1705850609492/work
@@ -42,6 +47,7 @@ parso @ file:///home/conda/feedstock_root/build_artifacts/parso_1712320355065/wo
 pathspec==0.12.1
 pexpect @ file:///home/conda/feedstock_root/build_artifacts/pexpect_1706113125309/work
 pickleshare @ file:///home/conda/feedstock_root/build_artifacts/pickleshare_1602536217715/work
+pillow==10.4.0
 platformdirs @ file:///home/conda/feedstock_root/build_artifacts/platformdirs_1715777629804/work
 prompt_toolkit @ file:///home/conda/feedstock_root/build_artifacts/prompt-toolkit_1718047967974/work
 psutil @ file:///Users/runner/miniforge3/conda-bld/psutil_1705722461036/work
@@ -50,6 +56,7 @@ pure-eval @ file:///home/conda/feedstock_root/build_artifacts/pure_eval_16428759
 pydantic==2.7.4
 pydantic_core==2.18.4
 Pygments @ file:///home/conda/feedstock_root/build_artifacts/pygments_1714846767233/work
+pyparsing==3.1.2
 python-dateutil @ file:///home/conda/feedstock_root/build_artifacts/python-dateutil_1709299778482/work
 python-dotenv==1.0.1
 pytz==2024.1

@@ -60,34 +60,45 @@ def generate_prompts(
             custom_id_counter += 1
     prompts = pd.DataFrame(prompts)
 
-    # Create JSONL batch file
-    batch_file_dir = create_batch_file(
-        prompts,
-        system_message_field="system_message_demographic_summarise",
-        user_message_field="demographic_info_qna",
-        batch_file_name="batch_input_demographic_info.jsonl",
-    )
+    ###### Demographic Information in 'You' Statements (Start) ######
+    # # Create JSONL batch file
+    # batch_file_dir = create_batch_file(
+    #     prompts,
+    #     system_message_field="system_message_demographic_summarise",
+    #     user_message_field="demographic_info_qna",
+    #     batch_file_name="batch_input_demographic_info.jsonl",
+    # )
 
-    # Get processed demographic information from batch query
-    processed_demographic_prompts = batch_query(
-        client,
-        batch_input_file_dir=batch_file_dir,
-        batch_output_file_dir="batch_output_demographic_info",
-    )
-    processed_demographic_prompts.rename(
-        columns={"query_response": "demographic_prompt"}, inplace=True
-    )
+    # # Get processed demographic information from batch query
+    # processed_demographic_prompts = batch_query(
+    #     client,
+    #     batch_input_file_dir=batch_file_dir,
+    #     batch_output_file_dir="batch_output_demographic_info",
+    # )
+    # processed_demographic_prompts.rename(
+    #     columns={"query_response": "demographic_prompt"}, inplace=True
+    # )
 
-    # Merge processed demographic information with prompts
-    prompts = merge_prompts_with_responses(prompts, processed_demographic_prompts)
+    # # Merge processed demographic information with prompts
+    # prompts = merge_prompts_with_responses(prompts, processed_demographic_prompts)
 
-    # Construct system message using survey context and demographic prompt
+    # # Construct system message using survey context and demographic prompt
+    # prompts["system_message"] = prompts.apply(
+    #     lambda row: construct_system_message(
+    #         row["survey_context"], row["demographic_prompt"]
+    #     ),
+    #     axis=1,
+    # )
+    ###### Demographic Information in 'You' Statements (End) ######
+
+    ###### Demographic Information in Q&A Format (Start) ######
     prompts["system_message"] = prompts.apply(
         lambda row: construct_system_message(
-            row["survey_context"], row["demographic_prompt"]
+            row["survey_context"], row["demographic_info_qna"]
         ),
         axis=1,
     )
+    ###### Demographic Information in Q&A Format (End) ######
 
     return prompts
 
@@ -129,7 +140,7 @@ def construct_question_prompts(questions_df: pd.DataFrame) -> dict:
         ):
             # Numeric responses
             question_prompts[question] = (
-                f"{question} Please respond with a numerical number no matter what:"
+                f"{question} Please only respond with a numerical value and do not return a text response:"
             )
 
         else:
@@ -159,4 +170,4 @@ def construct_system_message(survey_context: str, demographic_prompt: str) -> st
     Returns:
         str: The constructed prompt.
     """
-    return f"{survey_context} \n\n {demographic_prompt}"
+    return f"{survey_context}\n\n{demographic_prompt}"

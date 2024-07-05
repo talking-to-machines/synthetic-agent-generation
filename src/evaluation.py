@@ -77,7 +77,10 @@ def evaluate_categorical_response(
     contingency_table = pd.crosstab(user_response, llm_response)
     chi2, _, _, _ = chi2_contingency(contingency_table)
     n = contingency_table.sum().sum()
-    cramer_v = float(np.sqrt(chi2 / (n * (min(contingency_table.shape) - 1))))
+    epsilon = 1e-10  # Small value to prevent division by zero
+    cramer_v = float(
+        np.sqrt(chi2 / max((n * (min(contingency_table.shape) - 1)), epsilon))
+    )
 
     return {
         "accuracy": accuracy,
