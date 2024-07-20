@@ -7,10 +7,107 @@ from src.data_processing import (
 from src.api_interaction import batch_query
 
 
+# def generate_prompts(
+#     client: OpenAI,
+#     data: pd.DataFrame,
+#     survey_context: str,
+#     survey_questions: list,
+# ) -> pd.DataFrame:
+#     """
+#     Generate prompts for survey questions.
+
+#     Parameters:
+#         client (OpenAI): The OpenAI client object.
+#         data (pd.DataFrame): The survey data.
+#         survey_context (str): The context of the survey.
+#         survey_questions (list): The list of survey questions.
+
+#     Returns:
+#         pd.DataFrame: The prompts generated for each question for each user.
+#     """
+#     # Generate prompts for survey questions
+#     question_prompts = construct_question_prompts(data[survey_questions])
+
+#     # Iterate through the survey data and generate prompts for each question for each user
+#     prompts = []
+#     custom_id_counter = 0
+#     for i in range(len(data)):
+#         for question in survey_questions:
+#             if pd.isnull(data.loc[i, question]):
+#                 continue
+
+#             prompts.append(
+#                 {
+#                     "custom_id": f"{custom_id_counter}",
+#                     "user_id": data.loc[i, "ID"],
+#                     "survey_context": survey_context,
+#                     "system_message_demographic_summarise": "Based on the following survey response from a subject, generate statements describing the subject and start every sentence with 'You'. Write it as a single paragraph and do not mention about the survey.",
+#                     "demographic_info_qna": generate_qna_format(
+#                         data.loc[
+#                             i,
+#                             [
+#                                 demo_question
+#                                 for demo_question in survey_questions
+#                                 if demo_question != question
+#                             ],
+#                         ]
+#                     ),
+#                     "question": question,
+#                     "question_prompt": question_prompts[question],
+#                     "user_response": data.loc[i, question],
+#                 }
+#             )
+#             custom_id_counter += 1
+#     prompts = pd.DataFrame(prompts)
+
+#     ###### Demographic Information in 'You' Statements (Start) ######
+#     # Create JSONL batch file
+#     batch_file_dir = create_batch_file(
+#         prompts,
+#         system_message_field="system_message_demographic_summarise",
+#         user_message_field="demographic_info_qna",
+#         batch_file_name="batch_input_demographic_info.jsonl",
+#     )
+
+#     # Get processed demographic information from batch query
+#     processed_demographic_prompts = batch_query(
+#         client,
+#         batch_input_file_dir=batch_file_dir,
+#         batch_output_file_dir="batch_output_demographic_info",
+#     )
+#     processed_demographic_prompts.rename(
+#         columns={"query_response": "demographic_prompt"}, inplace=True
+#     )
+
+#     # Merge processed demographic information with prompts
+#     prompts = merge_prompts_with_responses(prompts, processed_demographic_prompts)
+
+#     # Construct system message using survey context and demographic prompt
+#     prompts["system_message"] = prompts.apply(
+#         lambda row: construct_system_message(
+#             row["survey_context"], row["demographic_prompt"]
+#         ),
+#         axis=1,
+#     )
+#     ###### Demographic Information in 'You' Statements (End) ######
+
+#     ###### Demographic Information in Q&A Format (Start) ######
+#     # prompts["system_message"] = prompts.apply(
+#     #     lambda row: construct_system_message(
+#     #         row["survey_context"], row["demographic_info_qna"]
+#     #     ),
+#     #     axis=1,
+#     # )
+#     ###### Demographic Information in Q&A Format (End) ######
+
+#     return prompts
+
+
 def generate_prompts(
     client: OpenAI,
     data: pd.DataFrame,
     survey_context: str,
+    demographic_questions: list,
     survey_questions: list,
 ) -> pd.DataFrame:
     """
@@ -20,12 +117,13 @@ def generate_prompts(
         client (OpenAI): The OpenAI client object.
         data (pd.DataFrame): The survey data.
         survey_context (str): The context of the survey.
+        demographic_questions (list): The list of demographic questions.
         survey_questions (list): The list of survey questions.
 
     Returns:
         pd.DataFrame: The prompts generated for each question for each user.
     """
-    # Generate prompts for survey questions
+    # Generate prompts for asking survey questions
     question_prompts = construct_question_prompts(data[survey_questions])
 
     # Iterate through the survey data and generate prompts for each question for each user
@@ -43,14 +141,7 @@ def generate_prompts(
                     "survey_context": survey_context,
                     "system_message_demographic_summarise": "Based on the following survey response from a subject, generate statements describing the subject and start every sentence with 'You'. Write it as a single paragraph and do not mention about the survey.",
                     "demographic_info_qna": generate_qna_format(
-                        data.loc[
-                            i,
-                            [
-                                demo_question
-                                for demo_question in survey_questions
-                                if demo_question != question
-                            ],
-                        ]
+                        data.loc[i, demographic_questions],
                     ),
                     "question": question,
                     "question_prompt": question_prompts[question],
@@ -115,7 +206,7 @@ def generate_qna_format(demographic_info: pd.Series) -> str:
     """
     survey_response = ""
     for question, response in demographic_info.items():
-        survey_response += f"Interviewer: {question} Me: {response}\n"
+        survey_response += f"Interviewer: {question} Me: {response} "
 
     return survey_response
 

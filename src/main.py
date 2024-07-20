@@ -22,10 +22,12 @@ def main(request):
 
     # Load and preprocess data
     data = load_data(data_file_path)
-    data = clean_data(data, request["survey_questions"])
+    data = clean_data(
+        data, request["demographic_questions"] + request["survey_questions"]
+    )
 
     prompts_with_responses_all = pd.DataFrame()
-    batch_size = 100
+    batch_size = 200
     for i in tqdm(range(0, len(data), batch_size)):
         batch_data = data[i : i + batch_size].reset_index(drop=True)
 
@@ -34,6 +36,7 @@ def main(request):
             client,
             batch_data,
             request["survey_context"],
+            request["demographic_questions"],
             request["survey_questions"],
         )
 
@@ -58,34 +61,43 @@ def main(request):
 
     # Save prompts with responses into Excel file
     prompts_response_file_path = os.path.join(
-        current_dir, f"../results/prompt_with_response_{version}.xlsx"
+        current_dir, f"../results/round2/prompt_with_response_{version}.xlsx"
     )
     prompts_with_responses_all.to_excel(prompts_response_file_path, index=False)
 
-    # Evaluate responses
-    evaluation_results = evaluate_responses(prompts_with_responses_all)
+    # # Evaluate responses
+    # evaluation_results = evaluate_responses(prompts_with_responses_all)
 
-    # Save evaluation results
-    evaluation_result_file_path = os.path.join(
-        current_dir, f"../results/evaluation_results_{version}.txt"
-    )
-    with open(evaluation_result_file_path, "w") as file:
-        file.write(str(evaluation_results))
+    # # Save evaluation results
+    # evaluation_result_file_path = os.path.join(
+    #     current_dir, f"../results/batch2/evaluation_results_{version}.txt"
+    # )
+    # with open(evaluation_result_file_path, "w") as file:
+    #     file.write(str(evaluation_results))
 
 
 if __name__ == "__main__":
-    version = "v2"
+    version = "v9"
     current_dir = os.path.dirname(__file__)
-    data_file_path = os.path.join(current_dir, "../data/ghana_wave_2_sample.xlsx")
+    data_file_path = os.path.join(current_dir, "../data/afrobarometer_sample.xlsx")
 
     input_data = {
         "data_file_path": data_file_path,
-        "survey_questions": [
+        "demographic_questions": [
+            "Do you come from a rural or urban area?",
             "How old are you?",
             "What is your gender?",
             "What is your race?",
+            "What is the primary language you speak in your home?",
             "What is your highest level of education?",
+            "What is your religion, if any?",
+            "What is your ethnic community or cultural group?",
+            "Do you have a job that pays a cash income? If yes, is it full time or part time? If no, are you currently looking for a job?",
+            "What is your main occupation? If unemployed, retired, or disabled, what was your last main occupation?",
             "Do you personally own a mobile phone? If not, does anyone else in your household own one?",
+            "In general, how would you describe your own present living conditions?",
+        ],
+        "survey_questions": [
             "Over the past year, how often, if ever, have you or anyone in your family gone without Medicines or medical treatment?",
             "In the past 12 months, have you had contact with a public clinic or hospital?",
             "How easy or difficult was it to obtain the medical care or services you needed?",
@@ -96,7 +108,7 @@ if __name__ == "__main__":
             "What is the main reason that you would be unlikely to get a COVID-19 vaccine?",
             "How much do you trust the government to ensure that any vaccine for COVID-19 that is developed or offered to Nigerian citizens is safe before it is used in this country?",
         ],
-        "survey_context": "This survey is conducted with a Chat GPT agent to explore and analyze responses on various topical social issues. Your participation will help us understand the capabilities and insights of AI in addressing these important topics. Assuming you are the participant of the survey, please review the following information about your demographics and answer any questions posed to you. Please make sure you provide no explanation for your answer and you answer exactly what is asked of you.\n\nPlease keep in mind that the Cramers V-correlations of age in the real data with other questions are the following: with the question what is your gender? 0.109928, with the question what is your race? 0.066874, with the question what is your highest level of education? 0.103037, with the question do you personally own a mobile phone? If not, does anyone else in your household own one? 0.075334, with the question over the past year, how often, if ever, have you or anyone in your family gone without Medicines or medical treatment? 0.000000, with the question in the past 12 months, have you had contact with a public clinic or hospital? 0.027378, with the question how easy or difficult was it to obtain the medical care or services you needed? 0.114810, with the question please tell me whether you personally or any other member of your household have became ill with, or tested positive for COVID-19 by the COVID-19 pandemic? 0.148629, with the question please tell me whether you personally or any other member of your household have temporarily or permanently lost a job, business, or primary source of income by the COVID-19 pandemic? 0.120599, with the question have you received a vaccination against COVID-19, either one or two doses? 0.066414, with the question if a vaccine for COVID-19 is available , how likely are you to try to get vaccinated? 0.018285, with the question what is the main reason that you would be unlikely to get a COVID-19 vaccine? 0.134007, with the question how much do you trust the government to ensure that any vaccine for COVID-19 that is developed or offered to Nigerian citizens is safe before it is used in this country? 0.057365.",
+        "survey_context": "You will simulate the persona of a human subject participating in a healthcare survey in Ghana. Please refer to the following information about your demographic profile, and respond to any questions in a consistent and coherent manner that matches with your demographic profile. Please also make sure you provide no explanations for your response and answer in the exact format that is asked of you.",
     }
 
     main(input_data)
