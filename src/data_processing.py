@@ -81,7 +81,7 @@ def create_batch_file(
             "url": "/v1/chat/completions",
             "body": {
                 "model": "gpt-4-turbo",
-                "temperature": 1,
+                "temperature": 0,
                 "messages": [
                     {"role": "system", "content": prompts.loc[i, system_message_field]},
                     {"role": "user", "content": prompts.loc[i, user_message_field]},
