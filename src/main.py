@@ -77,7 +77,7 @@ def main(request):
 
 
 if __name__ == "__main__":
-    version = "v3"
+    version = "v3.2"
     current_dir = os.path.dirname(__file__)
     data_file_path = os.path.join(current_dir, "../data/afrobarometer_sample.xlsx")
 
@@ -132,8 +132,8 @@ if __name__ == "__main__":
             # "How often do you use the Internet?",
             # "In your opinion, what are the most important problems facing this country that government should address?",
 
-            # "In general, when dealing with health workers and clinic or hospital staff, how much do you feel that they treat you with respect?",
-            # "And have you encountered long waiting time with a public clinic or hospital during the past 12 months?",
+            "In general, when dealing with health workers and clinic or hospital staff, how much do you feel that they treat you with respect?",
+            "And have you encountered long waiting time with a public clinic or hospital during the past 12 months?",
         ],
         "survey_questions": [
             "Over the past year, how often, if ever, have you or anyone in your family gone without Medicines or medical treatment?",
