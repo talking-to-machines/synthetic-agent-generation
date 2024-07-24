@@ -27,7 +27,7 @@ def main(request):
     )
 
     prompts_with_responses_all = pd.DataFrame()
-    batch_size = 200
+    batch_size = 1000
     for i in tqdm(range(0, len(data), batch_size)):
         batch_data = data[i : i + batch_size].reset_index(drop=True)
 
@@ -61,7 +61,7 @@ def main(request):
 
     # Save prompts with responses into Excel file
     prompts_response_file_path = os.path.join(
-        current_dir, f"../results/round2/prompt_with_response_{version}.xlsx"
+        current_dir, f"../results/round4/prompt_with_response_{version}.xlsx"
     )
     prompts_with_responses_all.to_excel(prompts_response_file_path, index=False)
 
@@ -77,7 +77,7 @@ def main(request):
 
 
 if __name__ == "__main__":
-    version = "v9"
+    version = "v2.2"
     current_dir = os.path.dirname(__file__)
     data_file_path = os.path.join(current_dir, "../data/afrobarometer_sample.xlsx")
 
@@ -96,6 +96,42 @@ if __name__ == "__main__":
             "What is your main occupation? If unemployed, retired, or disabled, what was your last main occupation?",
             "Do you personally own a mobile phone? If not, does anyone else in your household own one?",
             "In general, how would you describe your own present living conditions?",
+            # "What region do you come from?",
+            # "Does the enumeration area have an electricity grid that most houses can access?",
+            # "Does the enumeration area have a piped water system that most houses can access?",
+            # "Does the enumeration area have a sewage system that most houses can access?",
+            # "Does the enumeration area have a mobile phone service that most houses can access?",
+            # "Are health clinics (private or public or both) present in the enumeration area or in easy walking distance?",
+            # "What is your main source of water for household use?",
+            # "Do you have an electric connection to your home from the Electricity Company of Ghana, ECG, or the Northern Electricty Distribution Company Ltd, NEDCO?",
+            # "Do you personally own a mobile phone? If yes, does your phone have access to the Internet?",
+            # "Do you feel close to any particular political party?",
+            # "In general, how would you describe the present economic condition of this country?",
+            # "When you get together with your friends or family, how often would you say you discuss political matters?",
+            # "In this country, how free are you to say what you think?",
+            # "Over the past year, how often, if ever, have you or anyone in your family felt unsafe walking in your neighborhood?",
+            # "Over the past year, how often, if ever, have you or anyone in your family feared crime in your own home?",
+            # "In this country, how free are you to join any political organization you want?",
+            # "In this country, how free are you to choose who to vote for without feeling pressured?",
+            # "During the past year, how often have you contacted an assemby man or woman about some important problem or to give them your views?",
+            # "During the past year, how often have you contacted a member of Parliament about some important problem or to give them your views?",
+            # "During the past year, how often have you contacted a political party official about some important problem or to give them your views?",
+            # "During the past year, how often have you contacted a traditional leader about some important problem or to give them your views?",
+            # "Overall, how satisfied are you with the way democracy works in Ghana?",
+            # "In your opinion, how often, in this country do people have to be careful of what they say about politics?",
+            # "In your opinion, how often, in this country are people treated unequally under the law?",
+            # "How often, if ever, are people treated unfairly by the government based on their economic status, that is, how rich or poor they are?",
+            # "To whom do you normally go to first for assistance, when you are concerned about your security and the security of your family?",
+            # "How much do you trust other Ghanaians?",
+            # "How much do you trust your relatives?",
+            # "How much do you trust your neighbours?",
+            # "How much do you trust other people you know?",
+            # "How much do you trust people from other religions?",
+            # "How much do you trust people from other ethnic groups?",
+            # "How often do you use the Internet?",
+            # "In your opinion, what are the most important problems facing this country that government should address?",
+            "In general, when dealing with health workers and clinic or hospital staff, how much do you feel that they treat you with respect?",
+            "And have you encountered long waiting time with a public clinic or hospital during the past 12 months?",
         ],
         "survey_questions": [
             "Over the past year, how often, if ever, have you or anyone in your family gone without Medicines or medical treatment?",
