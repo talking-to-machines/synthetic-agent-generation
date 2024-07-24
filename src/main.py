@@ -77,7 +77,7 @@ def main(request):
 
 
 if __name__ == "__main__":
-    version = "v2.2"
+    version = "v3"
     current_dir = os.path.dirname(__file__)
     data_file_path = os.path.join(current_dir, "../data/afrobarometer_sample.xlsx")
 
@@ -96,6 +96,7 @@ if __name__ == "__main__":
             "What is your main occupation? If unemployed, retired, or disabled, what was your last main occupation?",
             "Do you personally own a mobile phone? If not, does anyone else in your household own one?",
             "In general, how would you describe your own present living conditions?",
+
             # "What region do you come from?",
             # "Does the enumeration area have an electricity grid that most houses can access?",
             # "Does the enumeration area have a piped water system that most houses can access?",
@@ -130,8 +131,9 @@ if __name__ == "__main__":
             # "How much do you trust people from other ethnic groups?",
             # "How often do you use the Internet?",
             # "In your opinion, what are the most important problems facing this country that government should address?",
-            "In general, when dealing with health workers and clinic or hospital staff, how much do you feel that they treat you with respect?",
-            "And have you encountered long waiting time with a public clinic or hospital during the past 12 months?",
+
+            # "In general, when dealing with health workers and clinic or hospital staff, how much do you feel that they treat you with respect?",
+            # "And have you encountered long waiting time with a public clinic or hospital during the past 12 months?",
         ],
         "survey_questions": [
             "Over the past year, how often, if ever, have you or anyone in your family gone without Medicines or medical treatment?",

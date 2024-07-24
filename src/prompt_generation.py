@@ -121,12 +121,12 @@ def generate_prompts(
                     "user_id": data.loc[i, "ID"],
                     "survey_context": survey_context,
                     "system_message_demographic_summarise": "Based on the following survey response from a subject, generate statements describing the subject and start every sentence with 'You'. Write it as a single paragraph and do not mention about the survey.",
-                    "demographic_info_qna": generate_qna_format(
-                        data.loc[i, demographic_questions],
-                    ),
-                    # "demographic_info_qna": generate_qna_format_2ndperson(
+                    # "demographic_info_qna": generate_qna_format(
                     #     data.loc[i, demographic_questions],
                     # ),
+                    "demographic_info_qna": generate_qna_format_2ndperson(
+                        data.loc[i, demographic_questions],
+                    ),
                     "question": question,
                     "question_prompt": question_prompts[question],
                     "user_response": data.loc[i, question],
@@ -136,43 +136,43 @@ def generate_prompts(
     prompts = pd.DataFrame(prompts)
 
     ###### Demographic Information in 'You' Statements (Start) ######
-    # Create JSONL batch file
-    batch_file_dir = create_batch_file(
-        prompts,
-        system_message_field="system_message_demographic_summarise",
-        user_message_field="demographic_info_qna",
-        batch_file_name="batch_input_demographic_info.jsonl",
-    )
+    # # Create JSONL batch file
+    # batch_file_dir = create_batch_file(
+    #     prompts,
+    #     system_message_field="system_message_demographic_summarise",
+    #     user_message_field="demographic_info_qna",
+    #     batch_file_name="batch_input_demographic_info.jsonl",
+    # )
 
-    # Get processed demographic information from batch query
-    processed_demographic_prompts = batch_query(
-        client,
-        batch_input_file_dir=batch_file_dir,
-        batch_output_file_dir="batch_output_demographic_info",
-    )
-    processed_demographic_prompts.rename(
-        columns={"query_response": "demographic_prompt"}, inplace=True
-    )
+    # # Get processed demographic information from batch query
+    # processed_demographic_prompts = batch_query(
+    #     client,
+    #     batch_input_file_dir=batch_file_dir,
+    #     batch_output_file_dir="batch_output_demographic_info",
+    # )
+    # processed_demographic_prompts.rename(
+    #     columns={"query_response": "demographic_prompt"}, inplace=True
+    # )
 
-    # Merge processed demographic information with prompts
-    prompts = merge_prompts_with_responses(prompts, processed_demographic_prompts)
+    # # Merge processed demographic information with prompts
+    # prompts = merge_prompts_with_responses(prompts, processed_demographic_prompts)
 
-    # Construct system message using survey context and demographic prompt
-    prompts["system_message"] = prompts.apply(
-        lambda row: construct_system_message(
-            row["survey_context"], row["demographic_prompt"]
-        ),
-        axis=1,
-    )
-    ###### Demographic Information in 'You' Statements (End) ######
-
-    ###### Demographic Information in Q&A Format (Start) ######
+    # # Construct system message using survey context and demographic prompt
     # prompts["system_message"] = prompts.apply(
     #     lambda row: construct_system_message(
-    #         row["survey_context"], row["demographic_info_qna"]
+    #         row["survey_context"], row["demographic_prompt"]
     #     ),
     #     axis=1,
     # )
+    ###### Demographic Information in 'You' Statements (End) ######
+
+    ###### Demographic Information in Q&A Format (Start) ######
+    prompts["system_message"] = prompts.apply(
+        lambda row: construct_system_message(
+            row["survey_context"], row["demographic_info_qna"]
+        ),
+        axis=1,
+    )
     ###### Demographic Information in Q&A Format (End) ######
 
     return prompts
@@ -206,54 +206,54 @@ def generate_qna_format_2ndperson(demographic_info: pd.Series) -> str:
         str: The formatted survey response.
     """
     case_code = {
-        "Do you come from a rural or urban area?": lambda: f"You come from a {response} area.",
-        "How old are you?": lambda: f"You are {response} years old.",
-        "What is your gender?": lambda: f"You are a {response}.",
-        "What is your race?": lambda: f"You are {response}.",
-        "What is the primary language you speak in your home?": lambda: f"The primary language you speak in your home is {response}.",
-        "What is your highest level of education?": lambda: f"Your highest level of education is {response}.",
-        "What is your religion, if any?": lambda: f"Your religion is {response}.",
-        "What is your ethnic community or cultural group?": lambda: f"Your ethnic community or cultural group is {response}.",
-        "Do you have a job that pays a cash income? If yes, is it full time or part time? If no, are you currently looking for a job?": lambda: f"On whether you have a job that pays a cash income, your response is {response}.",
-        "What is your main occupation? If unemployed, retired, or disabled, what was your last main occupation?": lambda: f"Your main/previous occupation is {response}.",
-        "Do you personally own a mobile phone? If not, does anyone else in your household own one?": lambda: f"On whether you or someone else in your household personally owns a mobile phone, your response is {response}.",
-        "In general, how would you describe your own present living conditions?": lambda: f"In general, you would describe your present living conditions as {response}.",
-        "What region do you come from?": lambda: f"You come from the {response} region.",
-        "Does the enumeration area have an electricity grid that most houses can access?": lambda: f"On whether you live in an area that has an electricity grid that most houses can access, your response is {response}.",
-        "Does the enumeration area have a piped water system that most houses can access?": lambda: f"On whether you live in an area that has a piped water system that most houses can access, your response is {response}.",
-        "Does the enumeration area have a sewage system that most houses can access?": lambda: f"On whether you live in an area that has a sewage system that most houses can access, your response is {response}.",
-        "Does the enumeration area have a mobile phone service that most houses can access?": lambda: f"On whether you live in an area that has a mobile phone service that most houses can access, your response is {response}.",
-        "Are health clinics (private or public or both) present in the enumeration area or in easy walking distance?": lambda: f"On whether you live in an area that has private or public healthcare clinics within easy walking distance, your response is {response}.",
-        "What is your main source of water for household use?": lambda: f"Your main source of water for household use is {response}.",
-        "Do you have an electric connection to your home from the Electricity Company of Ghana, ECG, or the Northern Electricty Distribution Company Ltd, NEDCO?": lambda: f"On whether you have an electricity connection to your home, your response is {response}.",
-        "Do you personally own a mobile phone? If yes, does your phone have access to the Internet?": lambda: f"On whether you personally own a mobile phone that has access to Internet, your response is {response}.",
-        "Do you feel close to any particular political party?": lambda: f"On whether you feel close to a particular political party, your response is {response}.",
-        "In general, how would you describe the present economic condition of this country?": lambda: f"You would describe the present economic condition of this country as {response}.",
-        "When you get together with your friends or family, how often would you say you discuss political matters?": lambda: f"When you get together with your friends or family, you {response} discuss political matters.",
-        "In this country, how free are you to say what you think?": lambda: f"In this country, you are {response} to say what you think.",
-        "Over the past year, how often, if ever, have you or anyone in your family felt unsafe walking in your neighborhood?": lambda: f"Over the past year, you have {response} felt unsafe walking in your neighborhood.",
-        "Over the past year, how often, if ever, have you or anyone in your family feared crime in your own home?": lambda: f"Over the past year, you or anyone in your family have {response} feared crime in your own home.",
-        "In this country, how free are you to join any political organization you want?": lambda: f"In this country, you feel {response} to join any political organization you want.",
-        "In this country, how free are you to choose who to vote for without feeling pressured?": lambda: f"In this country, you feel {response} to choose who to vote for without feeling pressured.",
-        "During the past year, how often have you contacted an assemby man or woman about some important problem or to give them your views?": lambda: f"During the past year, you have {response} contacted an assembly man or woman about some important problem or to give them your views.",
-        "During the past year, how often have you contacted a member of Parliament about some important problem or to give them your views?": lambda: f"During the past year, you have {response} contacted a member of Parliament about some important problem or to give them your views.",
-        "During the past year, how often have you contacted a political party official about some important problem or to give them your views?": lambda: f"During the past year, you have {response} contacted a political party official about some important problem or to give them your views.",
-        "During the past year, how often have you contacted a traditional leader about some important problem or to give them your views?": lambda: f"During the past year, you have {response} contacted a traditional leader about some important problem or to give them your views.",
-        "Overall, how satisfied are you with the way democracy works in Ghana?": lambda: f"Overall, your view on the way democracy works in Ghana is {response}.",
-        "In your opinion, how often, in this country do people have to be careful of what they say about politics?": lambda: f"In your opinion, people in your country {response} have to be careful of what they say about politics.",
-        "In your opinion, how often, in this country are people treated unequally under the law?": lambda: f"In your opinion, people in this country are {response} treated unequally under the law.",
-        "How often, if ever, are people treated unfairly by the government based on their economic status, that is, how rich or poor they are?": lambda: f"If people in this country are {response} treated unfairly by the government based on their economic status.",
-        "To whom do you normally go to first for assistance, when you are concerned about your security and the security of your family?": lambda: f"When you are concerned about your security and the security of your family, you normally go to {response}.",
-        "How much do you trust other Ghanaians?": lambda: f"You trust other Ghanaians {response}.",
-        "How much do you trust your relatives?": lambda: f"You trust your relatives {response}.",
-        "How much do you trust your neighbours?": lambda: f"You trust your neighbours {response}.",
-        "How much do you trust other people you know?": lambda: f"You trust other people you know {response}.",
-        "How much do you trust people from other religions?": lambda: f"You trust people from other religions {response}.",
-        "How much do you trust people from other ethnic groups?": lambda: f"You trust people from other ethnic groups {response}.",
-        "How often do you use the Internet?": lambda: f"You use the Internet {response}.",
-        "In your opinion, what are the most important problems facing this country that government should address?": lambda: f"In your opinion, the most important problems facing this country that the government should address are {response}.",
-        "In general, when dealing with health workers and clinic or hospital staff, how much do you feel that they treat you with respect?": lambda: f"In general, when dealing with health workers and clinic or hospital staff, you feel that they treat you with respect {response}.",
-        "And have you encountered long waiting time with a public clinic or hospital during the past 12 months?": lambda: f"On whether you have encountered long waiting time with a public clinic or hospital during the past 12 months, your response is {response}.",
+        "Do you come from a rural or urban area?": lambda response: f"You come from a {response} area.",
+        "How old are you?": lambda response: f"You are {response} years old.",
+        "What is your gender?": lambda response: f"You are a {response}.",
+        "What is your race?": lambda response: f"You are {response}.",
+        "What is the primary language you speak in your home?": lambda response: f"The primary language you speak in your home is {response}.",
+        "What is your highest level of education?": lambda response: f"Your highest level of education is {response}.",
+        "What is your religion, if any?": lambda response: f"Your religion is {response}.",
+        "What is your ethnic community or cultural group?": lambda response: f"Your ethnic community or cultural group is {response}.",
+        "Do you have a job that pays a cash income? If yes, is it full time or part time? If no, are you currently looking for a job?": lambda response: f"On whether you have a job that pays a cash income, your response is {response}.",
+        "What is your main occupation? If unemployed, retired, or disabled, what was your last main occupation?": lambda response: f"Your main/previous occupation is {response}.",
+        "Do you personally own a mobile phone? If not, does anyone else in your household own one?": lambda response: f"On whether you or someone else in your household personally owns a mobile phone, your response is {response}.",
+        "In general, how would you describe your own present living conditions?": lambda response: f"In general, you would describe your present living conditions as {response}.",
+        "What region do you come from?": lambda response: f"You come from the {response} region.",
+        "Does the enumeration area have an electricity grid that most houses can access?": lambda response: f"On whether you live in an area that has an electricity grid that most houses can access, your response is {response}.",
+        "Does the enumeration area have a piped water system that most houses can access?": lambda response: f"On whether you live in an area that has a piped water system that most houses can access, your response is {response}.",
+        "Does the enumeration area have a sewage system that most houses can access?": lambda response: f"On whether you live in an area that has a sewage system that most houses can access, your response is {response}.",
+        "Does the enumeration area have a mobile phone service that most houses can access?": lambda response: f"On whether you live in an area that has a mobile phone service that most houses can access, your response is {response}.",
+        "Are health clinics (private or public or both) present in the enumeration area or in easy walking distance?": lambda response: f"On whether you live in an area that has private or public healthcare clinics within easy walking distance, your response is {response}.",
+        "What is your main source of water for household use?": lambda response: f"Your main source of water for household use is {response}.",
+        "Do you have an electric connection to your home from the Electricity Company of Ghana, ECG, or the Northern Electricty Distribution Company Ltd, NEDCO?": lambda response: f"On whether you have an electricity connection to your home, your response is {response}.",
+        "Do you personally own a mobile phone? If yes, does your phone have access to the Internet?": lambda response: f"On whether you personally own a mobile phone that has access to Internet, your response is {response}.",
+        "Do you feel close to any particular political party?": lambda response: f"On whether you feel close to a particular political party, your response is {response}.",
+        "In general, how would you describe the present economic condition of this country?": lambda response: f"You would describe the present economic condition of this country as {response}.",
+        "When you get together with your friends or family, how often would you say you discuss political matters?": lambda response: f"When you get together with your friends or family, you {response} discuss political matters.",
+        "In this country, how free are you to say what you think?": lambda response: f"In this country, you are {response} to say what you think.",
+        "Over the past year, how often, if ever, have you or anyone in your family felt unsafe walking in your neighborhood?": lambda response: f"Over the past year, you have {response} felt unsafe walking in your neighborhood.",
+        "Over the past year, how often, if ever, have you or anyone in your family feared crime in your own home?": lambda response: f"Over the past year, you or anyone in your family have {response} feared crime in your own home.",
+        "In this country, how free are you to join any political organization you want?": lambda response: f"In this country, you feel {response} to join any political organization you want.",
+        "In this country, how free are you to choose who to vote for without feeling pressured?": lambda response: f"In this country, you feel {response} to choose who to vote for without feeling pressured.",
+        "During the past year, how often have you contacted an assemby man or woman about some important problem or to give them your views?": lambda response: f"During the past year, you have {response} contacted an assembly man or woman about some important problem or to give them your views.",
+        "During the past year, how often have you contacted a member of Parliament about some important problem or to give them your views?": lambda response: f"During the past year, you have {response} contacted a member of Parliament about some important problem or to give them your views.",
+        "During the past year, how often have you contacted a political party official about some important problem or to give them your views?": lambda response: f"During the past year, you have {response} contacted a political party official about some important problem or to give them your views.",
+        "During the past year, how often have you contacted a traditional leader about some important problem or to give them your views?": lambda response: f"During the past year, you have {response} contacted a traditional leader about some important problem or to give them your views.",
+        "Overall, how satisfied are you with the way democracy works in Ghana?": lambda response: f"Overall, your view on the way democracy works in Ghana is {response}.",
+        "In your opinion, how often, in this country do people have to be careful of what they say about politics?": lambda response: f"In your opinion, people in your country {response} have to be careful of what they say about politics.",
+        "In your opinion, how often, in this country are people treated unequally under the law?": lambda response: f"In your opinion, people in this country are {response} treated unequally under the law.",
+        "How often, if ever, are people treated unfairly by the government based on their economic status, that is, how rich or poor they are?": lambda response: f"If people in this country are {response} treated unfairly by the government based on their economic status.",
+        "To whom do you normally go to first for assistance, when you are concerned about your security and the security of your family?": lambda response: f"When you are concerned about your security and the security of your family, you normally go to {response}.",
+        "How much do you trust other Ghanaians?": lambda response: f"You trust other Ghanaians {response}.",
+        "How much do you trust your relatives?": lambda response: f"You trust your relatives {response}.",
+        "How much do you trust your neighbours?": lambda response: f"You trust your neighbours {response}.",
+        "How much do you trust other people you know?": lambda response: f"You trust other people you know {response}.",
+        "How much do you trust people from other religions?": lambda response: f"You trust people from other religions {response}.",
+        "How much do you trust people from other ethnic groups?": lambda response: f"You trust people from other ethnic groups {response}.",
+        "How often do you use the Internet?": lambda response: f"You use the Internet {response}.",
+        "In your opinion, what are the most important problems facing this country that government should address?": lambda response: f"In your opinion, the most important problems facing this country that the government should address are {response}.",
+        "In general, when dealing with health workers and clinic or hospital staff, how much do you feel that they treat you with respect?": lambda response: f"In general, when dealing with health workers and clinic or hospital staff, you feel that they treat you with respect {response}.",
+        "And have you encountered long waiting time with a public clinic or hospital during the past 12 months?": lambda response: f"On whether you have encountered long waiting time with a public clinic or hospital during the past 12 months, your response is {response}.",
     }
 
     survey_response = ""
