@@ -40,8 +40,8 @@ def batch_query(
             raise Exception("Batch job failed.")
         else:
             # Wait for 5 minutes before checking again
-            time.sleep(300)
-            # time.sleep(60)
+            # time.sleep(300)
+            time.sleep(60)
 
     # Retrieve batch results
     result_file_id = batch_job.output_file_id

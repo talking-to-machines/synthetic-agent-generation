@@ -1,7 +1,6 @@
 import pandas as pd
 from openai import OpenAI
 from src.data_processing import (
-    merge_prompts_with_responses,
     create_batch_file,
 )
 from src.api_interaction import batch_query
@@ -37,11 +36,8 @@ question_options = {
         "Yes",
     ],
     "If a vaccine for COVID-19 is available , how likely are you to try to get vaccinated?": [
-        "Somewhat unlikely",
-        "Very unlikely",
-        "Very likely",
-        "Somewhat likely",
-        "Don't know",
+        "Likely",
+        "Unlikely"
     ],
     "What is the main reason that you would be unlikely to get a COVID-19 vaccine?": [
         "Vaccine is not safe",
@@ -81,29 +77,47 @@ question_options = {
         "Don't know",
         "Refused",
     ],
+    "Have you received a COVID-19 vaccine?": [
+        "No",
+        "Yes"
+    ]
+}
+
+treatment_video_transcript = {
+    "CDC":"Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID 19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. Getting the COVID-19 vaccine will help prevent you from getting COVID-19 and reduce your risk of being hospitalized with COVID-19. COVID 19 vaccine help you to protect yourself your environment and your loved ones from COVID-19 exposure.",
+    "Placebo":"The Sun lights up our lives for business for education even for socializing but when the Sun sets many people use candles who are quality battery-operated torches and kerosene lamps as inefficient and expensive ways to create light. What if you can take some Sun with you at night?  You can with portable solar products there are different types, but each portable solar product is made up of three basic parts: a small solar panel, a modern rechargeable battery and an LED bulb. The solar panel catches the light from the Sun and stores this energy in the battery. This can now be used for much needed light when it's dark. Many can even charge phones portable solar products should be reliable affordable and warranted be sure to demand top quality solar products look for these products lighting Africa shining the way.",
+    "LowCash":"Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 20 Cedi. If you get vaccinated, you will get rewarded.",
+    "HighCash":"Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 60 Cedi. If you get vaccinated, you will get rewarded.",
 }
 
 
 def generate_prompts(
-    client: OpenAI,
     data: pd.DataFrame,
     survey_context: str,
     demographic_questions: list,
     survey_questions: list,
+    include_backstory: bool,
+    backstory_file_path: str = "",
 ) -> pd.DataFrame:
     """
     Generate prompts for survey questions.
 
     Parameters:
-        client (OpenAI): The OpenAI client object.
         data (pd.DataFrame): The survey data.
         survey_context (str): The context of the survey.
         demographic_questions (list): The list of demographic questions.
         survey_questions (list): The list of survey questions.
+        include_backstory (bool): Indicates if the subject's backstory should be included.
+        backstory_file_path (str): Indicates the file path to the backstory file
 
     Returns:
         pd.DataFrame: The prompts generated for each question for each user.
     """
+    if include_backstory:
+        # Load backstories
+        backstories = pd.read_excel(backstory_file_path)
+        data = pd.merge(left=data, right=backstories[["ID","backstory"]], on="ID")
+
     # Generate prompts for asking survey questions
     question_prompts = construct_question_prompts(data[survey_questions])
 
@@ -111,6 +125,12 @@ def generate_prompts(
     prompts = []
     custom_id_counter = 0
     for i in range(len(data)):
+        # Extract subject backstory
+        if include_backstory:
+            backstory = f"\n\n{data.loc[i, 'backstory']}"
+        else:
+            backstory = ""
+
         for question in survey_questions:
             if pd.isnull(data.loc[i, question]):
                 continue
@@ -118,15 +138,11 @@ def generate_prompts(
             prompts.append(
                 {
                     "custom_id": f"{custom_id_counter}",
-                    "user_id": data.loc[i, "ID"],
+                    "ID": data.loc[i, "ID"],
                     "survey_context": survey_context,
-                    "system_message_demographic_summarise": "Based on the following survey response from a subject, generate statements describing the subject and start every sentence with 'You'. Write it as a single paragraph and do not mention about the survey.",
-                    # "demographic_info_qna": generate_qna_format(
-                    #     data.loc[i, demographic_questions],
-                    # ),
-                    "demographic_info_qna": generate_qna_format_2ndperson(
+                    "demographic_info": generate_qna_format(
                         data.loc[i, demographic_questions],
-                    ),
+                    ) + backstory,
                     "question": question,
                     "question_prompt": question_prompts[question],
                     "user_response": data.loc[i, question],
@@ -135,50 +151,263 @@ def generate_prompts(
             custom_id_counter += 1
     prompts = pd.DataFrame(prompts)
 
-    ###### Demographic Information in 'You' Statements (Start) ######
-    # # Create JSONL batch file
-    # batch_file_dir = create_batch_file(
-    #     prompts,
-    #     system_message_field="system_message_demographic_summarise",
-    #     user_message_field="demographic_info_qna",
-    #     batch_file_name="batch_input_demographic_info.jsonl",
-    # )
-
-    # # Get processed demographic information from batch query
-    # processed_demographic_prompts = batch_query(
-    #     client,
-    #     batch_input_file_dir=batch_file_dir,
-    #     batch_output_file_dir="batch_output_demographic_info",
-    # )
-    # processed_demographic_prompts.rename(
-    #     columns={"query_response": "demographic_prompt"}, inplace=True
-    # )
-
-    # # Merge processed demographic information with prompts
-    # prompts = merge_prompts_with_responses(prompts, processed_demographic_prompts)
-
-    # # Construct system message using survey context and demographic prompt
-    # prompts["system_message"] = prompts.apply(
-    #     lambda row: construct_system_message(
-    #         row["survey_context"], row["demographic_prompt"]
-    #     ),
-    #     axis=1,
-    # )
-    ###### Demographic Information in 'You' Statements (End) ######
-
-    ###### Demographic Information in Q&A Format (Start) ######
     prompts["system_message"] = prompts.apply(
         lambda row: construct_system_message(
-            row["survey_context"], row["demographic_info_qna"]
+            row["survey_context"], row["demographic_info"]
         ),
         axis=1,
     )
-    ###### Demographic Information in Q&A Format (End) ######
 
     return prompts
 
 
-def generate_qna_format(demographic_info: pd.Series) -> str:
+def generate_candor_prompts(
+    data: pd.DataFrame,
+    demographic_questions: list,
+    survey_questions: list,
+    include_backstory: bool,
+    backstory_file_path: str = "",
+    supplementary_file_path: str = ""
+) -> pd.DataFrame:
+    """
+    Generate prompts for survey questions.
+
+    Parameters:
+        data (pd.DataFrame): The survey data.
+        demographic_questions (list): The list of demographic questions.
+        survey_questions (list): The list of survey questions.
+        include_backstory (bool): Indicates if the subject's backstory should be included.
+        backstory_file_path (str): Indicates the file path to the backstory file
+        supplementary_file_path (str): Indicates the file path to the supplementary country file
+
+    Returns:
+        pd.DataFrame: The prompts generated for each question for each user.
+    """
+    demographic_questions.remove("country")
+    
+    if include_backstory:
+        # Load backstories
+        backstories = pd.read_excel(backstory_file_path)
+        data = pd.merge(left=data, right=backstories[["ID","backstory"]], on="ID")
+
+    # Load country supplementary data
+    supplementary_data = pd.read_excel(supplementary_file_path)
+    data = pd.merge(left=data, right=supplementary_data, on="country")
+
+    # Generate prompts for asking survey questions
+    question_prompts = construct_question_prompts(data[survey_questions])
+
+    # Iterate through the survey data and generate prompts for each question for each user
+    prompts = []
+    custom_id_counter = 0
+    for i in range(len(data)):
+        # Extract subject backstory
+        if include_backstory:
+            backstory = f"\n\n{data.loc[i, 'backstory']}"
+        else:
+            backstory = ""
+
+        for question in survey_questions:
+            if pd.isnull(data.loc[i, question]):
+                continue
+
+            prompts.append(
+                {
+                    "custom_id": f"{custom_id_counter}",
+                    "ID": data.loc[i, "ID"],
+                    "survey_context": data.loc[i, "replication_instruction_prompt"] + data.loc[i, "replication_fewshot_demographic"],
+                    "demographic_info": generate_qna_format(
+                        data.loc[i, demographic_questions],
+                    ) + backstory,
+                    "question": question,
+                    "question_prompt": question_prompts[question],
+                    "user_response": data.loc[i, question],
+                }
+            )
+            custom_id_counter += 1
+    prompts = pd.DataFrame(prompts)
+
+    prompts["system_message"] = prompts.apply(
+        lambda row: construct_system_message(
+            row["survey_context"], row["demographic_info"]
+        ),
+        axis=1,
+    )
+
+    return prompts
+
+
+def generate_backstory_prompts(
+    data: pd.DataFrame,
+    demographic_questions: list,
+) -> pd.DataFrame:
+    """
+    Generate prompts for creating backstories.
+
+    Parameters:
+        data (pd.DataFrame): The survey data.
+        demographic_questions (list): The list of demographic questions.
+
+    Returns:
+        pd.DataFrame: The prompts generated for creating backstories for each user.
+    """
+    # Iterate through the survey data and generate prompts for each question for each user
+    prompts = []
+    custom_id_counter = 0
+    for i in range(len(data)):
+        demographic_info = generate_qna_format(data.loc[i, demographic_questions])
+        prompts.append(
+            {
+                "custom_id": f"{custom_id_counter}",
+                "ID": data.loc[i, "ID"],
+                "demographic_info": demographic_info,
+                "system_message": f"Below you will be asked to complete some demographic questions, and then answer a question\n\n{demographic_info}",
+                "question_prompt": "Create your backstory based on the information provided. Please describe in detail in first person narration.",
+            }
+        )
+        custom_id_counter += 1
+    prompts = pd.DataFrame(prompts)
+
+    return prompts
+
+
+def generate_synthetic_experiment_prompts(
+    data: pd.DataFrame,
+    survey_context: str,
+    demographic_questions: list,
+    question: str,
+    include_backstory: bool,
+    backstory_file_path: str = "",
+) -> pd.DataFrame:
+    """
+    Generate prompts for synthetic experiment.
+
+    Parameters:
+        data (pd.DataFrame): The survey data.
+        survey_context (str): The context of the survey.
+        demographic_questions (list): The list of demographic questions.
+        question (str): The question to be answered.
+        include_backstory (bool): Indicates if the subject's backstory should be included.
+        backstory_file_path (str): Indicates the file path to the backstory file
+
+    Returns:
+        pd.DataFrame: The prompts generated for each question for each user.
+    """
+    if include_backstory:
+        # Load backstories
+        backstories = pd.read_excel(backstory_file_path)
+        data = pd.merge(left=data, right=backstories[["ID","backstory"]], on="ID")
+
+    # Iterate through the survey data and generate prompts for each question for each user
+    prompts = []
+    custom_id_counter = 0
+    for i in range(len(data)):
+        # Extract subject backstory
+        if include_backstory:
+            backstory = f"\n\n{data.loc[i, 'backstory']}"
+        else:
+            backstory = ""
+
+        question_prompt = f"{question} Please only respond with 'Yes' or 'No' and then clearly explain the reasoning steps you took that led to your response on a new line:"
+
+        prompts.append(
+            {
+                "custom_id": f"{custom_id_counter}",
+                "ID": data.loc[i, "ID"],
+                "survey_context": survey_context,
+                "demographic_info": generate_qna_format(
+                    data.loc[i, demographic_questions], synthetic_experiment=True
+                ) + backstory,
+                # "treatment": data.loc[i, "treatment"],
+                "question": question,
+                "question_prompt": question_prompt,
+            }
+        )
+        custom_id_counter += 1
+    prompts = pd.DataFrame(prompts)
+
+    prompts["system_message"] = prompts.apply(
+        lambda row: construct_system_message_with_treatment(
+            row["survey_context"], row["demographic_info"]
+        ),
+        axis=1,
+    )
+
+    return prompts
+
+
+def generate_candor_synthetic_experiment_prompts(
+    data: pd.DataFrame,
+    demographic_questions: list,
+    question: str,
+    include_backstory: bool,
+    backstory_file_path: str = "",
+    supplementary_file_path: str = ""
+) -> pd.DataFrame:
+    """
+    Generate prompts for synthetic experiment.
+
+    Parameters:
+        data (pd.DataFrame): The survey data.
+        demographic_questions (list): The list of demographic questions.
+        question (str): The question to be answered.
+        include_backstory (bool): Indicates if the subject's backstory should be included.
+        backstory_file_path (str): Indicates the file path to the backstory file
+        supplementary_file_path (str): Indicates the file path to the supplementary country file
+
+    Returns:
+        pd.DataFrame: The prompts generated for each question for each user.
+    """
+    demographic_questions.remove("country")
+
+    if include_backstory:
+        # Load backstories
+        backstories = pd.read_excel(backstory_file_path)
+        data = pd.merge(left=data, right=backstories[["ID","backstory"]], on="ID")
+
+    # Load country supplementary data
+    supplementary_data = pd.read_excel(supplementary_file_path)
+    data = pd.merge(left=data, right=supplementary_data, on="country")
+
+    # Iterate through the survey data and generate prompts for each question for each user
+    prompts = []
+    custom_id_counter = 0
+    for i in range(len(data)):
+        # Extract subject backstory
+        if include_backstory:
+            backstory = f"\n\n{data.loc[i, 'backstory']}"
+        else:
+            backstory = ""
+
+        question_prompt = f"{question} Please only respond with 'Yes' or 'No' and then clearly explain the reasoning steps you took that led to your response on a new line:"
+
+        prompts.append(
+            {
+                "custom_id": f"{custom_id_counter}",
+                "ID": data.loc[i, "ID"],
+                "survey_context": data.loc[i, "synthetic_instruction_prompt"] + data.loc[i, "synthetic_placebo_fewshot_demographic"],
+                "demographic_info": generate_qna_format(
+                    data.loc[i, demographic_questions]
+                ) + backstory,
+                "question": question,
+                "question_prompt": question_prompt,
+                "treatment_transcript": data.loc[i, "placebo_transcript"],
+            }
+        )
+        custom_id_counter += 1
+    prompts = pd.DataFrame(prompts)
+
+    prompts["system_message"] = prompts.apply(
+        lambda row: construct_system_message_with_treatment(
+            row["survey_context"], row["demographic_info"] + "\n\nYou were asked to watch the video six weeks ago. Here is the transcript of the video:\n" + row["treatment_transcript"]
+        ),
+        axis=1,
+    )
+
+    return prompts
+
+
+def generate_qna_format(demographic_info: pd.Series, synthetic_experiment: bool = False) -> str:
     """
     Formats the demographic information of a subject in a Q&A format.
 
@@ -189,83 +418,13 @@ def generate_qna_format(demographic_info: pd.Series) -> str:
         str: The formatted survey response.
     """
     survey_response = ""
+    counter = 1
     for question, response in demographic_info.items():
-        survey_response += f"Interviewer: {question} Me: {response} "
+        survey_response += f"{counter}) Interviewer: {question} Me: {response} "
+        counter += 1
 
-    return survey_response
-
-
-def generate_qna_format_2ndperson(demographic_info: pd.Series) -> str:
-    """
-    Formats the demographic information of a subject in 2nd person.
-
-    Parameters:
-        demographic_info (pd.Series): A pandas Series containing the demographic information of the subject.
-
-    Returns:
-        str: The formatted survey response.
-    """
-    case_code = {
-        "Do you come from a rural or urban area?": lambda response: f"You come from a {response} area.",
-        "How old are you?": lambda response: f"You are {response} years old.",
-        "What is your gender?": lambda response: f"You are a {response}.",
-        "What is your race?": lambda response: f"You are {response}.",
-        "What is the primary language you speak in your home?": lambda response: f"The primary language you speak in your home is {response}.",
-        "What is your highest level of education?": lambda response: f"Your highest level of education is {response}.",
-        "What is your religion, if any?": lambda response: f"Your religion is {response}.",
-        "What is your ethnic community or cultural group?": lambda response: f"Your ethnic community or cultural group is {response}.",
-        "Do you have a job that pays a cash income? If yes, is it full time or part time? If no, are you currently looking for a job?": lambda response: f"On whether you have a job that pays a cash income, your response is {response}.",
-        "What is your main occupation? If unemployed, retired, or disabled, what was your last main occupation?": lambda response: f"Your main/previous occupation is {response}.",
-        "Do you personally own a mobile phone? If not, does anyone else in your household own one?": lambda response: f"On whether you or someone else in your household personally owns a mobile phone, your response is {response}.",
-        "In general, how would you describe your own present living conditions?": lambda response: f"In general, you would describe your present living conditions as {response}.",
-        "What region do you come from?": lambda response: f"You come from the {response} region.",
-        "Does the enumeration area have an electricity grid that most houses can access?": lambda response: f"On whether you live in an area that has an electricity grid that most houses can access, your response is {response}.",
-        "Does the enumeration area have a piped water system that most houses can access?": lambda response: f"On whether you live in an area that has a piped water system that most houses can access, your response is {response}.",
-        "Does the enumeration area have a sewage system that most houses can access?": lambda response: f"On whether you live in an area that has a sewage system that most houses can access, your response is {response}.",
-        "Does the enumeration area have a mobile phone service that most houses can access?": lambda response: f"On whether you live in an area that has a mobile phone service that most houses can access, your response is {response}.",
-        "Are health clinics (private or public or both) present in the enumeration area or in easy walking distance?": lambda response: f"On whether you live in an area that has private or public healthcare clinics within easy walking distance, your response is {response}.",
-        "What is your main source of water for household use?": lambda response: f"Your main source of water for household use is {response}.",
-        "Do you have an electric connection to your home from the Electricity Company of Ghana, ECG, or the Northern Electricty Distribution Company Ltd, NEDCO?": lambda response: f"On whether you have an electricity connection to your home, your response is {response}.",
-        "Do you personally own a mobile phone? If yes, does your phone have access to the Internet?": lambda response: f"On whether you personally own a mobile phone that has access to Internet, your response is {response}.",
-        "Do you feel close to any particular political party?": lambda response: f"On whether you feel close to a particular political party, your response is {response}.",
-        "In general, how would you describe the present economic condition of this country?": lambda response: f"You would describe the present economic condition of this country as {response}.",
-        "When you get together with your friends or family, how often would you say you discuss political matters?": lambda response: f"When you get together with your friends or family, you {response} discuss political matters.",
-        "In this country, how free are you to say what you think?": lambda response: f"In this country, you are {response} to say what you think.",
-        "Over the past year, how often, if ever, have you or anyone in your family felt unsafe walking in your neighborhood?": lambda response: f"Over the past year, you have {response} felt unsafe walking in your neighborhood.",
-        "Over the past year, how often, if ever, have you or anyone in your family feared crime in your own home?": lambda response: f"Over the past year, you or anyone in your family have {response} feared crime in your own home.",
-        "In this country, how free are you to join any political organization you want?": lambda response: f"In this country, you feel {response} to join any political organization you want.",
-        "In this country, how free are you to choose who to vote for without feeling pressured?": lambda response: f"In this country, you feel {response} to choose who to vote for without feeling pressured.",
-        "During the past year, how often have you contacted an assemby man or woman about some important problem or to give them your views?": lambda response: f"During the past year, you have {response} contacted an assembly man or woman about some important problem or to give them your views.",
-        "During the past year, how often have you contacted a member of Parliament about some important problem or to give them your views?": lambda response: f"During the past year, you have {response} contacted a member of Parliament about some important problem or to give them your views.",
-        "During the past year, how often have you contacted a political party official about some important problem or to give them your views?": lambda response: f"During the past year, you have {response} contacted a political party official about some important problem or to give them your views.",
-        "During the past year, how often have you contacted a traditional leader about some important problem or to give them your views?": lambda response: f"During the past year, you have {response} contacted a traditional leader about some important problem or to give them your views.",
-        "Overall, how satisfied are you with the way democracy works in Ghana?": lambda response: f"Overall, your view on the way democracy works in Ghana is {response}.",
-        "In your opinion, how often, in this country do people have to be careful of what they say about politics?": lambda response: f"In your opinion, people in your country {response} have to be careful of what they say about politics.",
-        "In your opinion, how often, in this country are people treated unequally under the law?": lambda response: f"In your opinion, people in this country are {response} treated unequally under the law.",
-        "How often, if ever, are people treated unfairly by the government based on their economic status, that is, how rich or poor they are?": lambda response: f"If people in this country are {response} treated unfairly by the government based on their economic status.",
-        "To whom do you normally go to first for assistance, when you are concerned about your security and the security of your family?": lambda response: f"When you are concerned about your security and the security of your family, you normally go to {response}.",
-        "How much do you trust other Ghanaians?": lambda response: f"You trust other Ghanaians {response}.",
-        "How much do you trust your relatives?": lambda response: f"You trust your relatives {response}.",
-        "How much do you trust your neighbours?": lambda response: f"You trust your neighbours {response}.",
-        "How much do you trust other people you know?": lambda response: f"You trust other people you know {response}.",
-        "How much do you trust people from other religions?": lambda response: f"You trust people from other religions {response}.",
-        "How much do you trust people from other ethnic groups?": lambda response: f"You trust people from other ethnic groups {response}.",
-        "How often do you use the Internet?": lambda response: f"You use the Internet {response}.",
-        "In your opinion, what are the most important problems facing this country that government should address?": lambda response: f"In your opinion, the most important problems facing this country that the government should address are {response}.",
-        "In general, when dealing with health workers and clinic or hospital staff, how much do you feel that they treat you with respect?": lambda response: f"In general, when dealing with health workers and clinic or hospital staff, you feel that they treat you with respect {response}.",
-        "And have you encountered long waiting time with a public clinic or hospital during the past 12 months?": lambda response: f"On whether you have encountered long waiting time with a public clinic or hospital during the past 12 months, your response is {response}.",
-    }
-
-    survey_response = ""
-    for question, response in demographic_info.items():
-        if (
-            pd.isnull(response)
-            or "don't know" in str(response).lower()
-            or "refused to answer" in str(response).lower()
-        ):
-            continue
-        # Execute the code for the corresponding case
-        survey_response += f"{case_code.get(question, '')(response)} "
+    if synthetic_experiment:
+        survey_response += "17) Interviewer: Have you received a vaccination against COVID-19, either one or two doses? Me: No"
 
     return survey_response
 
@@ -294,11 +453,25 @@ def construct_question_prompts(questions_df: pd.DataFrame) -> dict:
             )
 
         else:
+            # # Cateogrical responses
+            # options = question_options[question]
+            # question_prompts[question] = (
+            #     f'{question} Please only respond with {", ".join([f"{repr(option)}" for option in options[:-1]])} or {repr(options[-1])}:'
+            # )
+
             # Cateogrical responses
             options = question_options[question]
+            # ### Configuration for Afrobarometer (START) ###
+            # question_prompts[question] = (
+            #     f'{question} Please only respond with {", ".join([f"{repr(option)}" for option in options[:-1]])} or {repr(options[-1])} and then clearly explain the reasoning steps you took that led to your response on a new line:'
+            # )
+            # ### Configuration for Afrobarometer (END) ###
+            
+            ### Configuration for CANDOR (START) ###
             question_prompts[question] = (
-                f'{question} Please respond with {", ".join([f"{repr(option)}" for option in options[:-1]])} or {repr(options[-1])}:'
+                f"{question} Please only respond with 'No' or 'Yes' and then clearly explain the reasoning steps you took that led to your response on a new line:"
             )
+            ### Configuration for CANDOR (END) ###
 
     return question_prompts
 
@@ -314,4 +487,44 @@ def construct_system_message(survey_context: str, demographic_prompt: str) -> st
     Returns:
         str: The constructed prompt.
     """
-    return f"{survey_context}\n\n{demographic_prompt}"
+    ### Configuration for Afrobarometer (START) ###
+    # return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou should note that the Health officials in Ghana have been communicating extensively to the population – both urban and rural about the COVID-19 virus. Most of the Ghana population know that the COVID-19 virus is dangerous for their health and they are aware of the benefits of getting the COVID-19 vaccination. However, vaccine hesitancy remain a notable challenge, influenced by misinformation and conspiracy theories circulating on social media. Despite efforts by health authorities to promote vaccination, some individuals remained cautious about the safety and efficacy of COVID-19 vaccines. Educational campaigns and outreach efforts are ongoing, but addressing deep-seated concerns and misinformation required continuous effort. Findings from past studies on COVID-19 vaccination efforts in Ghana reveal a complex interplay of factors influencing vaccine uptake and hesitancy. Positive perceptions of vaccines, belief in their efficacy, knowledge of COVID-19, and a generally favorable attitude toward vaccination significantly boost acceptance. Conversely, concerns about negative side effects, mistrust in vaccine safety, fear, and spiritual or religious beliefs contribute to hesitancy. Demographic factors such as educational attainment, gender, religious affiliation, age, and marital status play crucial roles in shaping attitudes towards vaccination. Higher levels of education, female gender, urban residence, Christian affiliation, and reliance on internet sources for COVID-19 information were associated with higher hesitancy rates. Notably, healthcare workers showed a varied acceptance rate influenced by their role, personal connections to COVID-19 cases, and trust in government measures. Despite efforts to increase coverage, only 40% of Ghanaians had received at least one vaccine dose.\n\nYou are asked to watch a video at this point. Here is the transcript of the video:\nThe Sun lights up our lives for business for education even for socializing but when the Sun sets many people use candles who are quality battery-operated torches and kerosene lamps as inefficient and expensive ways to create light. What if you can take some Sun with you at night?  You can with portable solar products there are different types, but each portable solar product is made up of three basic parts: a small solar panel, a modern rechargeable battery and an LED bulb. The solar panel catches the light from the Sun and stores this energy in the battery. This can now be used for much needed light when it's dark. Many can even charge phones portable solar products should be reliable affordable and warranted be sure to demand top quality solar products look for these products lighting Africa shining the way."
+    ### Configuration for Afrobarometer (END) ###
+
+    ### Configuration for CANDOR (START) ###
+    return f"{survey_context}\nYour demographic profile:\n{demographic_prompt}\n\nYou were asked to watch the video six weeks ago. Here is the transcript of the video:\nThe Sun lights up our lives for business for education even for socializing but when the Sun sets many people use candles who are quality battery-operated torches and kerosene lamps as inefficient and expensive ways to create light. What if you can take some Sun with you at night?  You can with portable solar products there are different types, but each portable solar product is made up of three basic parts: a small solar panel, a modern rechargeable battery and an LED bulb. The solar panel catches the light from the Sun and stores this energy in the battery. This can now be used for much needed light when it's dark. Many can even charge phones portable solar products should be reliable affordable and warranted be sure to demand top quality solar products."
+    ### Configuration for CANDOR (END) ###
+
+
+def construct_backstory_system_message(demographic_prompt: str) -> str:
+    """
+    Constructs system message by combining the survey context and demographic prompt.
+
+    Parameters:
+        survey_context (str): The context of the survey.
+        demographic_prompt (str): The prompt for demographic information.
+
+    Returns:
+        str: The constructed prompt.
+    """
+    return f"Below you will be asked to complete some demographic questions, and then answer a question. You will see a question from the “Interviewer:” and then your response will be preceded by “Me:”'\n\n{demographic_prompt}"
+
+
+def construct_system_message_with_treatment(survey_context: str, demographic_prompt: str) -> str:
+    """
+    Constructs system message by combining the survey context, demographic prompt and treatment prompt.
+
+    Parameters:
+        survey_context (str): The context of the survey.
+        demographic_prompt (str): The prompt for demographic information.
+
+    Returns:
+        str: The constructed prompt.
+    """
+    ### Configuration for Afrobarometer (START) ###
+    # return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou should note that the Health officials in Ghana have been communicating extensively to the population – both urban and rural about the COVID-19 virus. Most of the Ghana population know that the COVID-19 virus is dangerous for their health and they are aware of the benefits of getting the COVID-19 vaccination. However, vaccine hesitancy remain a notable challenge, influenced by misinformation and conspiracy theories circulating on social media. Despite efforts by health authorities to promote vaccination, some individuals remained cautious about the safety and efficacy of COVID-19 vaccines. Educational campaigns and outreach efforts are ongoing, but addressing deep-seated concerns and misinformation required continuous effort. Findings from past studies on COVID-19 vaccination efforts in Ghana reveal a complex interplay of factors influencing vaccine uptake and hesitancy. Positive perceptions of vaccines, belief in their efficacy, knowledge of COVID-19, and a generally favorable attitude toward vaccination significantly boost acceptance. Conversely, concerns about negative side effects, mistrust in vaccine safety, fear, and spiritual or religious beliefs contribute to hesitancy. Demographic factors such as educational attainment, gender, religious affiliation, age, and marital status play crucial roles in shaping attitudes towards vaccination. Higher levels of education, female gender, urban residence, Christian affiliation, and reliance on internet sources for COVID-19 information were associated with higher hesitancy rates. Notably, healthcare workers showed a varied acceptance rate influenced by their role, personal connections to COVID-19 cases, and trust in government measures. Despite efforts to increase coverage, only 40% of Ghanaians had received at least one vaccine dose.\n\nYou are asked to watch a video at this point. Here is the transcript of the video:\nHealth authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 60 Cedi. If you get vaccinated, you will get rewarded."
+    ### Configuration for Afrobarometer (END) ###
+
+    ### Configuration for CANDOR (START) ###
+    return f"{survey_context}\nYour demographic profile:\n{demographic_prompt}"
+    ### Configuration for CANDOR (END) ###
