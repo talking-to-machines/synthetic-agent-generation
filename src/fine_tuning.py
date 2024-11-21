@@ -1,9 +1,5 @@
 import os
-from src.data_processing import (
-    load_data,
-    clean_data,
-    create_finetune_batch_file
-)
+from src.data_processing import load_data, clean_data, create_finetune_batch_file
 from src.prompt_generation import generate_prompts
 from openai import OpenAI
 from config.settings import OPENAI_API_KEY
@@ -66,7 +62,7 @@ if __name__ == "__main__":
         "survey_questions": [
             "In the past 12 months, have you had contact with a public clinic or hospital?",
             "Have you received a vaccination against COVID-19, either one or two doses?",
-            ],
+        ],
         "survey_context": "Please put yourself in the shoes of a human subject participating in a healthcare survey in Ghana. You will be provided with a demographic profile that describes the area/region/district where you live, your gender, the highest education level you achieved, your religion, the distance to your nearest health clinic, the political party you feel closest to, and the percentage vote for the New Patriotic Party in your district. The information will be provided to you in the format of a survey interview. You will see a question from the “Interviewer:” and then your human subject response will be preceded by “Me:”. We also provide you with the demographic profile of three other subjects and their responses to several COVID-19 vaccination-related questions in the same survey interview format. Lastly, we will provide you with some general findings from past studies on Ghana’s COVID-19 vaccination efforts. After you receive your complete human subject profile, you will be asked whether you received the COVID-19 vaccination. Please provide a consistent and coherent response using all the information provided. It is crucial for you to accurately replicate the response of a human subject that has the demographic profile you are provided. The human subject response will vary depending on their demographic profile. If you are unsure of an answer, provide a plausible response that is based on all of the information available to you. Respond to each question in the exact format specified and do not add any information beyond what is requested.",
     }
 

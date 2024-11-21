@@ -4,7 +4,7 @@ from src.data_processing import (
     load_data,
     clean_data,
     create_batch_file,
-    create_batch_file_with_image
+    create_batch_file_with_image,
 )
 from src.prompt_generation import generate_prompts, generate_candor_prompts
 from src.api_interaction import batch_query
@@ -21,16 +21,18 @@ def main(request):
 
     # Load and preprocess data
     data = load_data(request["data_file_path"])
-    cols_of_interest = ["ID"] + request["demographic_questions"] + request["survey_questions"]
-    data = clean_data(
-        data, cols_of_interest
+    cols_of_interest = (
+        ["ID"] + request["demographic_questions"] + request["survey_questions"]
     )
+    data = clean_data(data, cols_of_interest)
 
     data_with_responses = pd.DataFrame()
     # batch_size = 3278
     batch_size = len(data)
     for i in tqdm(range(0, len(data), batch_size)):
-        batch_data = data.loc[i : i + batch_size, cols_of_interest].reset_index(drop=True)
+        batch_data = data.loc[i : i + batch_size, cols_of_interest].reset_index(
+            drop=True
+        )
 
         # Generate demographic prompts
         ### Configuration for Afrobarometer (START) ###
@@ -51,7 +53,7 @@ def main(request):
             request["survey_questions"],
             include_backstory=True,  # True if backstory should be included
             backstory_file_path=request["backstory_file_path"],
-            supplementary_file_path=request["supplementary_file_path"]
+            supplementary_file_path=request["supplementary_file_path"],
         )
         ### Configuration for CANDOR (END) ###
 
@@ -76,9 +78,13 @@ def main(request):
             batch_output_file_dir="batch_output_llm_replication.jsonl",
         )
         llm_responses.rename(columns={"query_response": "llm_response"}, inplace=True)
-        
-        prompts_with_responses = pd.merge(left=prompts, right=llm_responses, on="custom_id")
-        batch_data_with_responses = pd.merge(left=batch_data, right=prompts_with_responses, on="ID")
+
+        prompts_with_responses = pd.merge(
+            left=prompts, right=llm_responses, on="custom_id"
+        )
+        batch_data_with_responses = pd.merge(
+            left=batch_data, right=prompts_with_responses, on="ID"
+        )
 
         data_with_responses = pd.concat(
             [data_with_responses, batch_data_with_responses], ignore_index=True
@@ -130,32 +136,36 @@ if __name__ == "__main__":
     version = "candor_replication_backstory+cotreasoning_5countries"
     current_dir = os.path.dirname(__file__)
     data_file_path = os.path.join(current_dir, "../data/candor_5countries.xlsx")
-    backstory_file_path = os.path.join(current_dir, "../results/round7/candor_backstory_5countries.xlsx")
-    supplementary_file_path = os.path.join(current_dir, "../results/round7/candor_supplementary.xlsx")
+    backstory_file_path = os.path.join(
+        current_dir, "../results/round7/candor_backstory_5countries.xlsx"
+    )
+    supplementary_file_path = os.path.join(
+        current_dir, "../results/round7/candor_supplementary.xlsx"
+    )
 
     input_data = {
         "data_file_path": data_file_path,
         "backstory_file_path": backstory_file_path,
-        "supplementary_file_path":supplementary_file_path,
+        "supplementary_file_path": supplementary_file_path,
         "demographic_questions": [
-            'What is your gender?', 
-            'What is your age?',
+            "What is your gender?",
+            "What is your age?",
             "The following is a scale from 0 to 10 that goes from left to right, where 0 means 'Left' and 10 means 'Right'. Today when talking about political trends, many people talk about those who are more sympathetic to the left or the right. According to the sense that the terms 'Left' and 'Right' have for you when you think about your political point of view, where would you find yourself on this scale?",
-            'Gross HOUSEHOLD income combines your gross income with that of your partner or any other household member with whom you share financial responsibilities BEFORE any taxes are paid and BEFORE any benefits are obtained. What is your gross annual household income?',
-            'Thinking back to 12 months ago, has your household income increased or decreased since then?',
-            'We would like to know how good or bad your health is TODAY. How would you rate your health today on a scale numbered 0 to 100? 100 means the best health you can imagine. 0 means the worst health you can imagine.',
-            'What is the highest degree or level of education you have completed?',
+            "Gross HOUSEHOLD income combines your gross income with that of your partner or any other household member with whom you share financial responsibilities BEFORE any taxes are paid and BEFORE any benefits are obtained. What is your gross annual household income?",
+            "Thinking back to 12 months ago, has your household income increased or decreased since then?",
+            "We would like to know how good or bad your health is TODAY. How would you rate your health today on a scale numbered 0 to 100? 100 means the best health you can imagine. 0 means the worst health you can imagine.",
+            "What is the highest degree or level of education you have completed?",
             'Do you have any dependent children who live with you? (By "dependent" children, we mean those who are not yet financially independent).',
-            'Are you currently married, in a civil partnership, or living with a partner?',
-            'Would you vote to re-elect this government in the next election?',
-            'Overall, how would you rate the current government on a scale of 0 (very low rating) to 100 (very high rating)?',
-            'Where in the country do you live?',
-            'country'
+            "Are you currently married, in a civil partnership, or living with a partner?",
+            "Would you vote to re-elect this government in the next election?",
+            "Overall, how would you rate the current government on a scale of 0 (very low rating) to 100 (very high rating)?",
+            "Where in the country do you live?",
+            "country",
         ],
         "survey_questions": [
             "Have you received a COVID-19 vaccine?",
         ],
-        "survey_context":"",
+        "survey_context": "",
     }
     ### Configuration for CANDOR (END) ###
 

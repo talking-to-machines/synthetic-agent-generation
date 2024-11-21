@@ -1,9 +1,4 @@
 import pandas as pd
-from openai import OpenAI
-from src.data_processing import (
-    create_batch_file,
-)
-from src.api_interaction import batch_query
 
 question_options = {
     "Over the past year, how often, if ever, have you or anyone in your family gone without Medicines or medical treatment?": [
@@ -37,7 +32,7 @@ question_options = {
     ],
     "If a vaccine for COVID-19 is available , how likely are you to try to get vaccinated?": [
         "Likely",
-        "Unlikely"
+        "Unlikely",
     ],
     "What is the main reason that you would be unlikely to get a COVID-19 vaccine?": [
         "Vaccine is not safe",
@@ -77,88 +72,18 @@ question_options = {
         "Don't know",
         "Refused",
     ],
-    "Have you received a COVID-19 vaccine?": [
-        "No",
-        "Yes"
-    ]
+    "Have you received a COVID-19 vaccine?": ["No", "Yes"],
 }
 
 treatment_video_transcript = {
-    "CDC":"Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID 19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. Getting the COVID-19 vaccine will help prevent you from getting COVID-19 and reduce your risk of being hospitalized with COVID-19. COVID 19 vaccine help you to protect yourself your environment and your loved ones from COVID-19 exposure.",
-    "Placebo":"The Sun lights up our lives for business for education even for socializing but when the Sun sets many people use candles who are quality battery-operated torches and kerosene lamps as inefficient and expensive ways to create light. What if you can take some Sun with you at night?  You can with portable solar products there are different types, but each portable solar product is made up of three basic parts: a small solar panel, a modern rechargeable battery and an LED bulb. The solar panel catches the light from the Sun and stores this energy in the battery. This can now be used for much needed light when it's dark. Many can even charge phones portable solar products should be reliable affordable and warranted be sure to demand top quality solar products look for these products lighting Africa shining the way.",
-    "LowCash":"Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 20 Cedi. If you get vaccinated, you will get rewarded.",
-    "HighCash":"Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 60 Cedi. If you get vaccinated, you will get rewarded.",
+    "CDC Health": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID 19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. Getting the COVID-19 vaccine will help prevent you from getting COVID-19 and reduce your risk of being hospitalized with COVID-19. COVID 19 vaccine help you to protect yourself your environment and your loved ones from COVID-19 exposure.",
+    "Placebo": "The Sun lights up our lives for business for education even for socializing but when the Sun sets many people use candles who are quality battery-operated torches and kerosene lamps as inefficient and expensive ways to create light. What if you can take some Sun with you at night?  You can with portable solar products there are different types, but each portable solar product is made up of three basic parts: a small solar panel, a modern rechargeable battery and an LED bulb. The solar panel catches the light from the Sun and stores this energy in the battery. This can now be used for much needed light when it's dark. Many can even charge phones portable solar products should be reliable affordable and warranted be sure to demand top quality solar products look for these products lighting Africa shining the way.",
+    "Low Cash": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 20 Cedi. If you get vaccinated, you will get rewarded.",
+    "High Cash": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 60 Cedi. If you get vaccinated, you will get rewarded.",
+    "TBHealth": "Health authorities are working hard to test people for being at risk of getting ill with Tuberculosis. If you are at risk you will be treated to stop you getting ill with Tuberculosis. The tests and treatment are safe and effective and free for everyone with no strings attached. After you have been tested and treated you will be safe from Tuberculosis. One in four people have sleeping Tuberculosis. If you have sleeping Tuberculosis, you will feel well, but there is a risk that the Tuberculosis bacteria will wake up and give you active Tuberculosis, a serious illness. Getting tested and treated for sleeping Tuberculosis will prevent you from getting active Tuberculosis and reduce your risk of being hospitalized with Tuberculosis. Tuberculosis testing will help you to protect yourself your environment and your loved ones from Tuberculosis exposure. We have two further questions to ask and then the survey will end.",
+    "TBHealthPlus3": "Health authorities are working hard to test people for being at risk of getting ill with Tuberculosis. If you are at risk you will be treated to stop you getting ill with Tuberculosis. The tests and treatment are safe and effective and free for everyone with no strings attached. After you have been tested and treated you will be safe from Tuberculosis. If you show up for the scheduled Tuberculosis testing in your village and get the Tuberculosis test you will receive 20 Cedi. If you get Tuberculosis tested, you will get rewarded. We have two further questions to ask and then the survey will end.",
+    "TBHealthPlusText": "Health authorities are working hard to test people for being at risk of getting ill with Tuberculosis. If you are at risk you will be treated to stop you getting ill with Tuberculosis. The tests and treatment are safe and effective and free for everyone with no strings attached. After you have been tested and treated you will be safe from Tuberculosis. One in four people have sleeping Tuberculosis. If you have sleeping Tuberculosis, you will feel well, but there is a risk that the Tuberculosis bacteria will wake up and give you active Tuberculosis, a serious illness. Getting tested and treated for sleeping Tuberculosis will prevent you from getting active Tuberculosis and reduce your risk of being hospitalized with Tuberculosis. Tuberculosis testing will help you to protect yourself your environment and your loved ones from Tuberculosis exposure. You also received a text message reminding you to go for your Tuberculosis screening appointment. We have two further questions to ask and then the survey will end.",
 }
-
-
-def generate_prompts(
-    data: pd.DataFrame,
-    survey_context: str,
-    demographic_questions: list,
-    survey_questions: list,
-    include_backstory: bool,
-    backstory_file_path: str = "",
-) -> pd.DataFrame:
-    """
-    Generate prompts for survey questions.
-
-    Parameters:
-        data (pd.DataFrame): The survey data.
-        survey_context (str): The context of the survey.
-        demographic_questions (list): The list of demographic questions.
-        survey_questions (list): The list of survey questions.
-        include_backstory (bool): Indicates if the subject's backstory should be included.
-        backstory_file_path (str): Indicates the file path to the backstory file
-
-    Returns:
-        pd.DataFrame: The prompts generated for each question for each user.
-    """
-    if include_backstory:
-        # Load backstories
-        backstories = pd.read_excel(backstory_file_path)
-        data = pd.merge(left=data, right=backstories[["ID","backstory"]], on="ID")
-
-    # Generate prompts for asking survey questions
-    question_prompts = construct_question_prompts(data[survey_questions])
-
-    # Iterate through the survey data and generate prompts for each question for each user
-    prompts = []
-    custom_id_counter = 0
-    for i in range(len(data)):
-        # Extract subject backstory
-        if include_backstory:
-            backstory = f"\n\n{data.loc[i, 'backstory']}"
-        else:
-            backstory = ""
-
-        for question in survey_questions:
-            if pd.isnull(data.loc[i, question]):
-                continue
-
-            prompts.append(
-                {
-                    "custom_id": f"{custom_id_counter}",
-                    "ID": data.loc[i, "ID"],
-                    "survey_context": survey_context,
-                    "demographic_info": generate_qna_format(
-                        data.loc[i, demographic_questions],
-                    ) + backstory,
-                    "question": question,
-                    "question_prompt": question_prompts[question],
-                    "user_response": data.loc[i, question],
-                }
-            )
-            custom_id_counter += 1
-    prompts = pd.DataFrame(prompts)
-
-    prompts["system_message"] = prompts.apply(
-        lambda row: construct_system_message(
-            row["survey_context"], row["demographic_info"]
-        ),
-        axis=1,
-    )
-
-    return prompts
 
 
 def generate_candor_prompts(
@@ -167,7 +92,7 @@ def generate_candor_prompts(
     survey_questions: list,
     include_backstory: bool,
     backstory_file_path: str = "",
-    supplementary_file_path: str = ""
+    supplementary_file_path: str = "",
 ) -> pd.DataFrame:
     """
     Generate prompts for survey questions.
@@ -184,11 +109,11 @@ def generate_candor_prompts(
         pd.DataFrame: The prompts generated for each question for each user.
     """
     demographic_questions.remove("country")
-    
+
     if include_backstory:
         # Load backstories
         backstories = pd.read_excel(backstory_file_path)
-        data = pd.merge(left=data, right=backstories[["ID","backstory"]], on="ID")
+        data = pd.merge(left=data, right=backstories[["ID", "backstory"]], on="ID")
 
     # Load country supplementary data
     supplementary_data = pd.read_excel(supplementary_file_path)
@@ -215,10 +140,12 @@ def generate_candor_prompts(
                 {
                     "custom_id": f"{custom_id_counter}",
                     "ID": data.loc[i, "ID"],
-                    "survey_context": data.loc[i, "replication_instruction_prompt"] + data.loc[i, "replication_fewshot_demographic"],
+                    "survey_context": data.loc[i, "replication_instruction_prompt"]
+                    + data.loc[i, "replication_fewshot_demographic"],
                     "demographic_info": generate_qna_format(
                         data.loc[i, demographic_questions],
-                    ) + backstory,
+                    )
+                    + backstory,
                     "question": question,
                     "question_prompt": question_prompts[question],
                     "user_response": data.loc[i, question],
@@ -271,6 +198,73 @@ def generate_backstory_prompts(
     return prompts
 
 
+def generate_replication_experiment_prompts(
+    data: pd.DataFrame,
+    survey_context: str,
+    demographic_questions: list,
+    question: str,
+    include_backstory: bool,
+    backstory_file_path: str = "",
+) -> pd.DataFrame:
+    """
+    Generate prompts for synthetic experiment.
+
+    Parameters:
+        data (pd.DataFrame): The survey data.
+        survey_context (str): The context of the survey.
+        demographic_questions (list): The list of demographic questions.
+        question (str): The question to be answered.
+        include_backstory (bool): Indicates if the subject's backstory should be included.
+        backstory_file_path (str): Indicates the file path to the backstory file
+
+    Returns:
+        pd.DataFrame: The prompts generated for each question for each user.
+    """
+    if include_backstory:
+        # Load backstories
+        backstories = pd.read_excel(backstory_file_path)
+        data = pd.merge(left=data, right=backstories[["ID", "backstory"]], on="ID")
+
+    # Iterate through the survey data and generate prompts for each question for each user
+    prompts = []
+    custom_id_counter = 0
+    for i in range(len(data)):
+        # Extract subject backstory
+        if include_backstory:
+            backstory = f"\n\n{data.loc[i, 'backstory']}"
+        else:
+            backstory = ""
+
+        question_prompt = f"{question} Please only respond with 'Yes' or 'No' and then clearly explain the reasoning steps you took that led to your response on a new line:"
+        # question_prompt = f"{question} Please only respond with 'Yes' or 'No'."
+
+        prompts.append(
+            {
+                "custom_id": f"{custom_id_counter}",
+                "ID": data.loc[i, "ID"],
+                "survey_context": survey_context,
+                "demographic_info": generate_qna_format(
+                    data.loc[i, demographic_questions],
+                    synthetic_experiment=True,  # False if running replication experiment
+                )
+                + backstory,
+                "question": question,
+                "question_prompt": question_prompt,
+            }
+        )
+        custom_id_counter += 1
+    prompts = pd.DataFrame(prompts)
+
+    prompts["system_message"] = prompts.apply(
+        lambda row: construct_system_message(
+            row["survey_context"], row["demographic_info"]
+        ),
+        axis=1,
+    )
+
+    return prompts
+
+
 def generate_synthetic_experiment_prompts(
     data: pd.DataFrame,
     survey_context: str,
@@ -296,7 +290,7 @@ def generate_synthetic_experiment_prompts(
     if include_backstory:
         # Load backstories
         backstories = pd.read_excel(backstory_file_path)
-        data = pd.merge(left=data, right=backstories[["ID","backstory"]], on="ID")
+        data = pd.merge(left=data, right=backstories[["ID", "backstory"]], on="ID")
 
     # Iterate through the survey data and generate prompts for each question for each user
     prompts = []
@@ -309,6 +303,7 @@ def generate_synthetic_experiment_prompts(
             backstory = ""
 
         question_prompt = f"{question} Please only respond with 'Yes' or 'No' and then clearly explain the reasoning steps you took that led to your response on a new line:"
+        # question_prompt = f"{question} Please only respond with 'Yes' or 'No'."
 
         prompts.append(
             {
@@ -316,9 +311,11 @@ def generate_synthetic_experiment_prompts(
                 "ID": data.loc[i, "ID"],
                 "survey_context": survey_context,
                 "demographic_info": generate_qna_format(
-                    data.loc[i, demographic_questions], synthetic_experiment=True
-                ) + backstory,
-                # "treatment": data.loc[i, "treatment"],
+                    data.loc[i, demographic_questions],
+                    synthetic_experiment=True,  # TODO False if running replication experiment
+                )
+                + backstory,
+                "treatment": data.loc[i, "Treatment"],
                 "question": question,
                 "question_prompt": question_prompt,
             }
@@ -328,7 +325,7 @@ def generate_synthetic_experiment_prompts(
 
     prompts["system_message"] = prompts.apply(
         lambda row: construct_system_message_with_treatment(
-            row["survey_context"], row["demographic_info"]
+            row["survey_context"], row["demographic_info"], row["treatment"]
         ),
         axis=1,
     )
@@ -342,7 +339,7 @@ def generate_candor_synthetic_experiment_prompts(
     question: str,
     include_backstory: bool,
     backstory_file_path: str = "",
-    supplementary_file_path: str = ""
+    supplementary_file_path: str = "",
 ) -> pd.DataFrame:
     """
     Generate prompts for synthetic experiment.
@@ -363,7 +360,7 @@ def generate_candor_synthetic_experiment_prompts(
     if include_backstory:
         # Load backstories
         backstories = pd.read_excel(backstory_file_path)
-        data = pd.merge(left=data, right=backstories[["ID","backstory"]], on="ID")
+        data = pd.merge(left=data, right=backstories[["ID", "backstory"]], on="ID")
 
     # Load country supplementary data
     supplementary_data = pd.read_excel(supplementary_file_path)
@@ -385,13 +382,15 @@ def generate_candor_synthetic_experiment_prompts(
             {
                 "custom_id": f"{custom_id_counter}",
                 "ID": data.loc[i, "ID"],
-                "survey_context": data.loc[i, "synthetic_instruction_prompt"] + data.loc[i, "synthetic_placebo_fewshot_demographic"],
+                "survey_context": data.loc[i, "synthetic_instruction_prompt"]
+                + data.loc[i, "synthetic_highcash_fewshot_demographic"],
                 "demographic_info": generate_qna_format(
                     data.loc[i, demographic_questions]
-                ) + backstory,
+                )
+                + backstory,
                 "question": question,
                 "question_prompt": question_prompt,
-                "treatment_transcript": data.loc[i, "placebo_transcript"],
+                "treatment_transcript": data.loc[i, "highcash_transcript"],
             }
         )
         custom_id_counter += 1
@@ -399,7 +398,10 @@ def generate_candor_synthetic_experiment_prompts(
 
     prompts["system_message"] = prompts.apply(
         lambda row: construct_system_message_with_treatment(
-            row["survey_context"], row["demographic_info"] + "\n\nYou were asked to watch the video six weeks ago. Here is the transcript of the video:\n" + row["treatment_transcript"]
+            row["survey_context"],
+            row["demographic_info"]
+            + "\n\nYou were asked to watch the video six weeks ago. Here is the transcript of the video:\n"
+            + row["treatment_transcript"],
         ),
         axis=1,
     )
@@ -407,7 +409,9 @@ def generate_candor_synthetic_experiment_prompts(
     return prompts
 
 
-def generate_qna_format(demographic_info: pd.Series, synthetic_experiment: bool = False) -> str:
+def generate_qna_format(
+    demographic_info: pd.Series, synthetic_experiment: bool = False
+) -> str:
     """
     Formats the demographic information of a subject in a Q&A format.
 
@@ -423,8 +427,15 @@ def generate_qna_format(demographic_info: pd.Series, synthetic_experiment: bool 
         survey_response += f"{counter}) Interviewer: {question} Me: {response} "
         counter += 1
 
+    ### Configuration for Afrobarometer and Ghana Wave I (END) ###
     if synthetic_experiment:
-        survey_response += "17) Interviewer: Have you received a vaccination against COVID-19, either one or two doses? Me: No"
+        survey_response += f"{counter}) Interviewer: Have you received a vaccination against COVID-19, either one or two doses? Me: No"
+    ### Configuration for Afrobarometer and Ghana Wave I (END) ###
+
+    ### Configuration for Ghana Wave II (END) ###
+    # if synthetic_experiment:
+    #     survey_response += f"{counter}) Interviewer: Have you received a vaccination against Tuberculosis? Me: No"
+    ### Configuration for Ghana Wave II (END) ###
 
     return survey_response
 
@@ -453,24 +464,19 @@ def construct_question_prompts(questions_df: pd.DataFrame) -> dict:
             )
 
         else:
-            # # Cateogrical responses
-            # options = question_options[question]
-            # question_prompts[question] = (
-            #     f'{question} Please only respond with {", ".join([f"{repr(option)}" for option in options[:-1]])} or {repr(options[-1])}:'
-            # )
-
             # Cateogrical responses
             options = question_options[question]
             # ### Configuration for Afrobarometer (START) ###
-            # question_prompts[question] = (
-            #     f'{question} Please only respond with {", ".join([f"{repr(option)}" for option in options[:-1]])} or {repr(options[-1])} and then clearly explain the reasoning steps you took that led to your response on a new line:'
-            # )
-            # ### Configuration for Afrobarometer (END) ###
-            
-            ### Configuration for CANDOR (START) ###
             question_prompts[question] = (
-                f"{question} Please only respond with 'No' or 'Yes' and then clearly explain the reasoning steps you took that led to your response on a new line:"
+                f'{question} Please only respond with {", ".join([f"{repr(option)}" for option in options[:-1]])} or {repr(options[-1])} and then clearly explain the reasoning steps you took that led to your response on a new line:'
+                # f'{question} You must only respond with {", ".join([f"{repr(option)}" for option in options[:-1]])} or {repr(options[-1])}:'
             )
+            # ### Configuration for Afrobarometer (END) ###
+
+            ### Configuration for CANDOR (START) ###
+            # question_prompts[question] = (
+            #     f"{question} Please only respond with 'No' or 'Yes' and then clearly explain the reasoning steps you took that led to your response on a new line:"
+            # )
             ### Configuration for CANDOR (END) ###
 
     return question_prompts
@@ -489,10 +495,19 @@ def construct_system_message(survey_context: str, demographic_prompt: str) -> st
     """
     ### Configuration for Afrobarometer (START) ###
     # return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou should note that the Health officials in Ghana have been communicating extensively to the population – both urban and rural about the COVID-19 virus. Most of the Ghana population know that the COVID-19 virus is dangerous for their health and they are aware of the benefits of getting the COVID-19 vaccination. However, vaccine hesitancy remain a notable challenge, influenced by misinformation and conspiracy theories circulating on social media. Despite efforts by health authorities to promote vaccination, some individuals remained cautious about the safety and efficacy of COVID-19 vaccines. Educational campaigns and outreach efforts are ongoing, but addressing deep-seated concerns and misinformation required continuous effort. Findings from past studies on COVID-19 vaccination efforts in Ghana reveal a complex interplay of factors influencing vaccine uptake and hesitancy. Positive perceptions of vaccines, belief in their efficacy, knowledge of COVID-19, and a generally favorable attitude toward vaccination significantly boost acceptance. Conversely, concerns about negative side effects, mistrust in vaccine safety, fear, and spiritual or religious beliefs contribute to hesitancy. Demographic factors such as educational attainment, gender, religious affiliation, age, and marital status play crucial roles in shaping attitudes towards vaccination. Higher levels of education, female gender, urban residence, Christian affiliation, and reliance on internet sources for COVID-19 information were associated with higher hesitancy rates. Notably, healthcare workers showed a varied acceptance rate influenced by their role, personal connections to COVID-19 cases, and trust in government measures. Despite efforts to increase coverage, only 40% of Ghanaians had received at least one vaccine dose.\n\nYou are asked to watch a video at this point. Here is the transcript of the video:\nThe Sun lights up our lives for business for education even for socializing but when the Sun sets many people use candles who are quality battery-operated torches and kerosene lamps as inefficient and expensive ways to create light. What if you can take some Sun with you at night?  You can with portable solar products there are different types, but each portable solar product is made up of three basic parts: a small solar panel, a modern rechargeable battery and an LED bulb. The solar panel catches the light from the Sun and stores this energy in the battery. This can now be used for much needed light when it's dark. Many can even charge phones portable solar products should be reliable affordable and warranted be sure to demand top quality solar products look for these products lighting Africa shining the way."
+
+    # Placebo
+    return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou should note that the Health officials in Ghana have been communicating extensively to the population – both urban and rural about the COVID-19 virus. Most of the Ghana population know that the COVID-19 virus is dangerous for their health and they are aware of the benefits of getting the COVID-19 vaccination. However, vaccine hesitancy remain a notable challenge, influenced by misinformation and conspiracy theories circulating on social media. Despite efforts by health authorities to promote vaccination, some individuals remained cautious about the safety and efficacy of COVID-19 vaccines. Educational campaigns and outreach efforts are ongoing, but addressing deep-seated concerns and misinformation required continuous effort. Findings from past studies on COVID-19 vaccination efforts in Ghana reveal a complex interplay of factors influencing vaccine uptake and hesitancy. Positive perceptions of vaccines, belief in their efficacy, knowledge of COVID-19, and a generally favorable attitude toward vaccination significantly boost acceptance. Conversely, concerns about negative side effects, mistrust in vaccine safety, fear, and spiritual or religious beliefs contribute to hesitancy. Demographic factors such as educational attainment, gender, religious affiliation, age, and marital status play crucial roles in shaping attitudes towards vaccination. Higher levels of education, female gender, urban residence, Christian affiliation, and reliance on internet sources for COVID-19 information were associated with higher hesitancy rates. Notably, healthcare workers showed a varied acceptance rate influenced by their role, personal connections to COVID-19 cases, and trust in government measures. Despite efforts to increase coverage, only 40% of Ghanaians had received at least one vaccine dose.\n\nYou are asked to watch a video at this point. Here is the transcript of the video:\n{treatment_video_transcript['Placebo']}"
+    # CDC Health
+    # return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou should note that the Health officials in Ghana have been communicating extensively to the population – both urban and rural about the COVID-19 virus. Most of the Ghana population know that the COVID-19 virus is dangerous for their health and they are aware of the benefits of getting the COVID-19 vaccination. However, vaccine hesitancy remain a notable challenge, influenced by misinformation and conspiracy theories circulating on social media. Despite efforts by health authorities to promote vaccination, some individuals remained cautious about the safety and efficacy of COVID-19 vaccines. Educational campaigns and outreach efforts are ongoing, but addressing deep-seated concerns and misinformation required continuous effort. Findings from past studies on COVID-19 vaccination efforts in Ghana reveal a complex interplay of factors influencing vaccine uptake and hesitancy. Positive perceptions of vaccines, belief in their efficacy, knowledge of COVID-19, and a generally favorable attitude toward vaccination significantly boost acceptance. Conversely, concerns about negative side effects, mistrust in vaccine safety, fear, and spiritual or religious beliefs contribute to hesitancy. Demographic factors such as educational attainment, gender, religious affiliation, age, and marital status play crucial roles in shaping attitudes towards vaccination. Higher levels of education, female gender, urban residence, Christian affiliation, and reliance on internet sources for COVID-19 information were associated with higher hesitancy rates. Notably, healthcare workers showed a varied acceptance rate influenced by their role, personal connections to COVID-19 cases, and trust in government measures. Despite efforts to increase coverage, only 40% of Ghanaians had received at least one vaccine dose.\n\nYou are asked to watch a video at this point. Here is the transcript of the video:\n{treatment_video_transcript['CDC Health']}"
+    # Low Cash
+    # return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou should note that the Health officials in Ghana have been communicating extensively to the population – both urban and rural about the COVID-19 virus. Most of the Ghana population know that the COVID-19 virus is dangerous for their health and they are aware of the benefits of getting the COVID-19 vaccination. However, vaccine hesitancy remain a notable challenge, influenced by misinformation and conspiracy theories circulating on social media. Despite efforts by health authorities to promote vaccination, some individuals remained cautious about the safety and efficacy of COVID-19 vaccines. Educational campaigns and outreach efforts are ongoing, but addressing deep-seated concerns and misinformation required continuous effort. Findings from past studies on COVID-19 vaccination efforts in Ghana reveal a complex interplay of factors influencing vaccine uptake and hesitancy. Positive perceptions of vaccines, belief in their efficacy, knowledge of COVID-19, and a generally favorable attitude toward vaccination significantly boost acceptance. Conversely, concerns about negative side effects, mistrust in vaccine safety, fear, and spiritual or religious beliefs contribute to hesitancy. Demographic factors such as educational attainment, gender, religious affiliation, age, and marital status play crucial roles in shaping attitudes towards vaccination. Higher levels of education, female gender, urban residence, Christian affiliation, and reliance on internet sources for COVID-19 information were associated with higher hesitancy rates. Notably, healthcare workers showed a varied acceptance rate influenced by their role, personal connections to COVID-19 cases, and trust in government measures. Despite efforts to increase coverage, only 40% of Ghanaians had received at least one vaccine dose.\n\nYou are asked to watch a video at this point. Here is the transcript of the video:\n{treatment_video_transcript['Low Cash']}"
+    # High Cash
+    # return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou should note that the Health officials in Ghana have been communicating extensively to the population – both urban and rural about the COVID-19 virus. Most of the Ghana population know that the COVID-19 virus is dangerous for their health and they are aware of the benefits of getting the COVID-19 vaccination. However, vaccine hesitancy remain a notable challenge, influenced by misinformation and conspiracy theories circulating on social media. Despite efforts by health authorities to promote vaccination, some individuals remained cautious about the safety and efficacy of COVID-19 vaccines. Educational campaigns and outreach efforts are ongoing, but addressing deep-seated concerns and misinformation required continuous effort. Findings from past studies on COVID-19 vaccination efforts in Ghana reveal a complex interplay of factors influencing vaccine uptake and hesitancy. Positive perceptions of vaccines, belief in their efficacy, knowledge of COVID-19, and a generally favorable attitude toward vaccination significantly boost acceptance. Conversely, concerns about negative side effects, mistrust in vaccine safety, fear, and spiritual or religious beliefs contribute to hesitancy. Demographic factors such as educational attainment, gender, religious affiliation, age, and marital status play crucial roles in shaping attitudes towards vaccination. Higher levels of education, female gender, urban residence, Christian affiliation, and reliance on internet sources for COVID-19 information were associated with higher hesitancy rates. Notably, healthcare workers showed a varied acceptance rate influenced by their role, personal connections to COVID-19 cases, and trust in government measures. Despite efforts to increase coverage, only 40% of Ghanaians had received at least one vaccine dose.\n\nYou are asked to watch a video at this point. Here is the transcript of the video:\n{treatment_video_transcript['High Cash']}"
     ### Configuration for Afrobarometer (END) ###
 
     ### Configuration for CANDOR (START) ###
-    return f"{survey_context}\nYour demographic profile:\n{demographic_prompt}\n\nYou were asked to watch the video six weeks ago. Here is the transcript of the video:\nThe Sun lights up our lives for business for education even for socializing but when the Sun sets many people use candles who are quality battery-operated torches and kerosene lamps as inefficient and expensive ways to create light. What if you can take some Sun with you at night?  You can with portable solar products there are different types, but each portable solar product is made up of three basic parts: a small solar panel, a modern rechargeable battery and an LED bulb. The solar panel catches the light from the Sun and stores this energy in the battery. This can now be used for much needed light when it's dark. Many can even charge phones portable solar products should be reliable affordable and warranted be sure to demand top quality solar products."
+    # return f"{survey_context}\nYour demographic profile:\n{demographic_prompt}\n\nYou were asked to watch the video six weeks ago. Here is the transcript of the video:\nThe Sun lights up our lives for business for education even for socializing but when the Sun sets many people use candles who are quality battery-operated torches and kerosene lamps as inefficient and expensive ways to create light. What if you can take some Sun with you at night?  You can with portable solar products there are different types, but each portable solar product is made up of three basic parts: a small solar panel, a modern rechargeable battery and an LED bulb. The solar panel catches the light from the Sun and stores this energy in the battery. This can now be used for much needed light when it's dark. Many can even charge phones portable solar products should be reliable affordable and warranted be sure to demand top quality solar products."
     ### Configuration for CANDOR (END) ###
 
 
@@ -510,21 +525,28 @@ def construct_backstory_system_message(demographic_prompt: str) -> str:
     return f"Below you will be asked to complete some demographic questions, and then answer a question. You will see a question from the “Interviewer:” and then your response will be preceded by “Me:”'\n\n{demographic_prompt}"
 
 
-def construct_system_message_with_treatment(survey_context: str, demographic_prompt: str) -> str:
+def construct_system_message_with_treatment(
+    survey_context: str, demographic_prompt: str, treatment: str
+) -> str:
     """
     Constructs system message by combining the survey context, demographic prompt and treatment prompt.
 
     Parameters:
         survey_context (str): The context of the survey.
         demographic_prompt (str): The prompt for demographic information.
+        treatment (str): The treatment applied to the agent
 
     Returns:
         str: The constructed prompt.
     """
-    ### Configuration for Afrobarometer (START) ###
-    # return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou should note that the Health officials in Ghana have been communicating extensively to the population – both urban and rural about the COVID-19 virus. Most of the Ghana population know that the COVID-19 virus is dangerous for their health and they are aware of the benefits of getting the COVID-19 vaccination. However, vaccine hesitancy remain a notable challenge, influenced by misinformation and conspiracy theories circulating on social media. Despite efforts by health authorities to promote vaccination, some individuals remained cautious about the safety and efficacy of COVID-19 vaccines. Educational campaigns and outreach efforts are ongoing, but addressing deep-seated concerns and misinformation required continuous effort. Findings from past studies on COVID-19 vaccination efforts in Ghana reveal a complex interplay of factors influencing vaccine uptake and hesitancy. Positive perceptions of vaccines, belief in their efficacy, knowledge of COVID-19, and a generally favorable attitude toward vaccination significantly boost acceptance. Conversely, concerns about negative side effects, mistrust in vaccine safety, fear, and spiritual or religious beliefs contribute to hesitancy. Demographic factors such as educational attainment, gender, religious affiliation, age, and marital status play crucial roles in shaping attitudes towards vaccination. Higher levels of education, female gender, urban residence, Christian affiliation, and reliance on internet sources for COVID-19 information were associated with higher hesitancy rates. Notably, healthcare workers showed a varied acceptance rate influenced by their role, personal connections to COVID-19 cases, and trust in government measures. Despite efforts to increase coverage, only 40% of Ghanaians had received at least one vaccine dose.\n\nYou are asked to watch a video at this point. Here is the transcript of the video:\nHealth authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 60 Cedi. If you get vaccinated, you will get rewarded."
-    ### Configuration for Afrobarometer (END) ###
+    ### Configuration for Afrobarometer and Ghana Wave I (START) ###
+    return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou should note that the Health officials in Ghana have been communicating extensively to the population – both urban and rural about the COVID-19 virus. Most of the Ghana population know that the COVID-19 virus is dangerous for their health and they are aware of the benefits of getting the COVID-19 vaccination. However, vaccine hesitancy remain a notable challenge, influenced by misinformation and conspiracy theories circulating on social media. Despite efforts by health authorities to promote vaccination, some individuals remained cautious about the safety and efficacy of COVID-19 vaccines. Educational campaigns and outreach efforts are ongoing, but addressing deep-seated concerns and misinformation required continuous effort. Findings from past studies on COVID-19 vaccination efforts in Ghana reveal a complex interplay of factors influencing vaccine uptake and hesitancy. Positive perceptions of vaccines, belief in their efficacy, knowledge of COVID-19, and a generally favorable attitude toward vaccination significantly boost acceptance. Conversely, concerns about negative side effects, mistrust in vaccine safety, fear, and spiritual or religious beliefs contribute to hesitancy. Demographic factors such as educational attainment, gender, religious affiliation, age, and marital status play crucial roles in shaping attitudes towards vaccination. Higher levels of education, female gender, urban residence, Christian affiliation, and reliance on internet sources for COVID-19 information were associated with higher hesitancy rates. Notably, healthcare workers showed a varied acceptance rate influenced by their role, personal connections to COVID-19 cases, and trust in government measures. Despite efforts to increase coverage, only 40% of Ghanaians had received at least one vaccine dose.\n\nYou are asked to watch a video at this point. Here is the transcript of the video:\n{treatment_video_transcript[treatment]}"
+    ### Configuration for Afrobarometer and Ghana Wave I (END) ###
+
+    ### Configuration for Afrobarometer and Ghana Wave II (START) ###
+    # return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nHere is the transcript of the video:\n{treatment_video_transcript[treatment]}"
+    ### Configuration for Afrobarometer and Ghana Wave II (END) ###
 
     ### Configuration for CANDOR (START) ###
-    return f"{survey_context}\nYour demographic profile:\n{demographic_prompt}"
+    # return f"{survey_context}\nYour demographic profile:\n{demographic_prompt}"
     ### Configuration for CANDOR (END) ###
