@@ -1,9 +1,6 @@
 import os
 import pandas as pd
-from src.data_processing import (
-    load_data,
-    clean_data,
-)
+from src.data_processing import load_data
 from src.prompt_generation import (
     generate_synthetic_experiment_prompts,
     generate_replication_experiment_prompts,
@@ -17,9 +14,10 @@ from src.api_interaction import (
 def main(request):
     # Load and preprocess data
     data = load_data(data_file_path)
-    # cols_of_interest = ["ID"] + request["demographic_questions"] + [request["question"]]
-    cols_of_interest = ["ID"] + request["demographic_questions"]
-    # data = clean_data(data, cols_of_interest)
+    cols_of_interest = (
+        ["ID"] + request["demographic_questions"] + [request["question"]]
+    )  # TODO replication experiment
+    # cols_of_interest = ["ID"] + request["demographic_questions"]  # TODO synthetic experiment
 
     # Generate demographic prompts
     ### Configuration for Afrobarometer (START) ###
@@ -45,12 +43,6 @@ def main(request):
     ### Configuration for CANDOR (END) ###
 
     # Perform query for survey questions
-    # prompts_with_responses = ollama_query(
-    #     model_name=request["model_name"],
-    #     prompts=prompts,
-    #     system_message_field="system_message",
-    #     user_message_field="question_prompt",
-    # )
     prompts_with_responses = inference_endpoint_query(
         endpoint_url=request["model_name"],
         prompts=prompts,
@@ -63,6 +55,7 @@ def main(request):
     data_with_responses = pd.merge(
         left=data[cols_of_interest], right=prompts_with_responses, on="ID"
     )
+    data_with_responses["user_response"] = data_with_responses[request["question"]]
 
     # Save prompts with responses into Excel file
     prompts_response_file_path = os.path.join(
@@ -73,17 +66,15 @@ def main(request):
 
 if __name__ == "__main__":
     ### Configuration for Afrobarometer (START) ###
-    # version = "afrobarometer_replication_llama-3.1-8b_s5"
-    version = "afrobarometer_synthetic_placebo_llama-3.1-8b_s3"
+    version = "afrobarometer_replication_gemma-2-27b_s2"
+    # version = "afrobarometer_synthetic_placebo_llama-3.1-8b_s3"
     experiment_round = "round8"
     current_dir = os.path.dirname(__file__)
     data_file_path = os.path.join(current_dir, "../data/afrobarometer.xlsx")
     backstory_file_path = os.path.join(
         current_dir, f"../results/{experiment_round}/afrobarometer_backstory.xlsx"
     )
-    model_name = (
-        "https://ftrcwuo1txdewvtn.eu-west-1.aws.endpoints.huggingface.cloud/v1/"
-    )
+    model_name = ""
 
     input_data = {
         "data_file_path": data_file_path,
@@ -108,10 +99,10 @@ if __name__ == "__main__":
             "What percentage of the population in your district voted for the New Patriotic Party (NPP)?",
             "In the past 12 months, have you had contact with a public clinic or hospital?",
         ],
-        # "question":"Have you received a vaccination against COVID-19, either one or two doses?",
-        # "survey_context":"Please put yourself in the shoes of a human subject participating in a healthcare survey in Ghana. You will be provided with a demographic profile that describes the area/region/district where you live, your gender, the highest education level you achieved, your religion, your employment status, the distance to your nearest health clinic, the political party you feel closest to, the percentage vote for the New Patriotic Party in your district, and your backstory. The information will be provided to you in the format of a survey interview. You will see a question from the “Interviewer:” and then your human subject response will be preceded by “Me:”. Additionally, we will provide you with some general findings from past studies on Ghana’s COVID-19 vaccination efforts. Lastly, you will watch a video. After you receive your complete human subject profile, you will be asked whether you received the COVID-19 vaccination. Please provide a consistent and coherent response using all the information provided. It is crucial for you to accurately replicate the response of a human subject that has the demographic profile you are provided. The human subject response will vary depending on their demographic profile. If you are unsure of an answer, provide a plausible response that is based on all of the information available to you. Respond to each question in the exact format specified and do not add any information beyond what is requested.",
-        "question": "Do you think you will get a first shot of a COVID-19 vaccine within the first 6 weeks after the vaccine becomes available to you?",
-        "survey_context": "Please put yourself in the shoes of a human subject participating in a healthcare survey in Ghana. You will be provided with a demographic profile that describes the area/region/district where you live, your gender, the highest education level you achieved, your religion, your employment status, the distance to your nearest health clinic, the political party you feel closest to, the percentage vote for the New Patriotic Party in your district, and your backstory. The information will be provided to you in the format of a survey interview. You will see a question from the “Interviewer:” and then your human subject response will be preceded by “Me:”. Additionally, we will provide you with some general findings from past studies on Ghana’s COVID-19 vaccination efforts. Lastly, you will watch a video. After you receive your complete human subject profile, you will be asked about your intentions to receive the COVID-19 vaccine. Assume that you have not been vaccinated against COVID-19. Please provide a consistent and coherent response using all the information provided. It is crucial for you to accurately replicate the response of a human subject that has the demographic profile you are provided. The human subject response will vary depending on their demographic profile. If you are unsure of an answer, provide a plausible response that is based on all of the information available to you. Respond to each question in the exact format specified and do not add any information beyond what is requested.",
+        "question": "Have you received a vaccination against COVID-19, either one or two doses?",
+        "survey_context": "Please put yourself in the shoes of a human subject participating in a healthcare survey in Ghana. You will be provided with a demographic profile that describes the area/region/district where you live, your gender, the highest education level you achieved, your religion, your employment status, the distance to your nearest health clinic, the political party you feel closest to, the percentage vote for the New Patriotic Party in your district, and your backstory. The information will be provided to you in the format of a survey interview. You will see a question from the “Interviewer:” and then your human subject response will be preceded by “Me:”. Additionally, we will provide you with some general findings from past studies on Ghana’s COVID-19 vaccination efforts. Lastly, you will watch a video. After you receive your complete human subject profile, you will be asked whether you received the COVID-19 vaccination. Please provide a consistent and coherent response using all the information provided. It is crucial for you to accurately replicate the response of a human subject that has the demographic profile you are provided. The human subject response will vary depending on their demographic profile. If you are unsure of an answer, provide a plausible response that is based on all of the information available to you. Respond to each question in the exact format specified and do not add any information beyond what is requested.",
+        # "question": "Do you think you will get a first shot of a COVID-19 vaccine within the first 6 weeks after the vaccine becomes available to you?",
+        # "survey_context": "Please put yourself in the shoes of a human subject participating in a healthcare survey in Ghana. You will be provided with a demographic profile that describes the area/region/district where you live, your gender, the highest education level you achieved, your religion, your employment status, the distance to your nearest health clinic, the political party you feel closest to, the percentage vote for the New Patriotic Party in your district, and your backstory. The information will be provided to you in the format of a survey interview. You will see a question from the “Interviewer:” and then your human subject response will be preceded by “Me:”. Additionally, we will provide you with some general findings from past studies on Ghana’s COVID-19 vaccination efforts. Lastly, you will watch a video. After you receive your complete human subject profile, you will be asked about your intentions to receive the COVID-19 vaccine. Assume that you have not been vaccinated against COVID-19. Please provide a consistent and coherent response using all the information provided. It is crucial for you to accurately replicate the response of a human subject that has the demographic profile you are provided. The human subject response will vary depending on their demographic profile. If you are unsure of an answer, provide a plausible response that is based on all of the information available to you. Respond to each question in the exact format specified and do not add any information beyond what is requested.",
     }
     ### Configuration for Afrobarometer (END) ###
 

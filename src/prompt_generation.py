@@ -182,16 +182,85 @@ def generate_backstory_prompts(
     prompts = []
     custom_id_counter = 0
     for i in range(len(data)):
-        demographic_info = generate_qna_format(data.loc[i, demographic_questions])
+
+        ### Configuration for Backstory (START) ###
+        # demographic_info = generate_qna_format(data.loc[i, demographic_questions])
+        # prompts.append(
+        #     {
+        #         "custom_id": f"{custom_id_counter}",
+        #         "ID": data.loc[i, "ID"],
+        #         "demographic_info": demographic_info,
+        #         "system_message": f"You are asked to complete some interview questions below\n\n{demographic_info}",
+        #         "question_prompt": "Create your backstory based on the information provided. Please describe in detail in first person narration.",
+        #     }
+        # )
+        ### Configuration for Backstory (END) ###
+
+        ### Configuration for Interview Summary (START) ###
+        # demographic_info = generate_interview_format(data.loc[i, demographic_questions])
+        # prompts.append(
+        #     {
+        #         "custom_id": f"{custom_id_counter}",
+        #         "ID": data.loc[i, "ID"],
+        #         "demographic_info": demographic_info,
+        #         "system_message": f"Here is a conversation between an interviewer and an interviewee\n\n{demographic_info}",
+        #         "question_prompt": "Succinctly summarize the facts about the interviewee based on the conversation above in a few bullet points in first person narration -- again, think short, concise bullet points",
+        #     }
+        # )
+        ### Configuration for Interview Summary (END) ###
+
+        ### Configuration for Expert Reflection Psychologist (START) ###
+        # demographic_info = generate_interview_format(data.loc[i, demographic_questions])
+        # prompts.append(
+        #     {
+        #         "custom_id": f"{custom_id_counter}",
+        #         "ID": data.loc[i, "ID"],
+        #         "demographic_info": demographic_info,
+        #         "system_message": f"Imagine you are an expert psychologist (with a PhD) taking notes while observing the following interview: \n\n{demographic_info}",
+        #         "question_prompt": "Write observations/reflections about the interviewee. (You should make more than 5 observations and fewer than 20.",
+        #     }
+        # )
+        ### Configuration for Expert Reflection Psychologist (END) ###
+
+        ### Configuration for Expert Reflection Economist (START) ###
+        # demographic_info = generate_interview_format(data.loc[i, demographic_questions])
+        # prompts.append(
+        #     {
+        #         "custom_id": f"{custom_id_counter}",
+        #         "ID": data.loc[i, "ID"],
+        #         "demographic_info": demographic_info,
+        #         "system_message": f"Imagine you are an expert economist (with a PhD) taking notes while observing the following interview: \n\n{demographic_info}",
+        #         "question_prompt": "Write observations/reflections about the interviewee. (You should make more than 5 observations and fewer than 20.",
+        #     }
+        # )
+        ### Configuration for Expert Reflection Economist (END) ###
+
+        ### Configuration for Expert Reflection Political Scientist (START) ###
+        # demographic_info = generate_interview_format(data.loc[i, demographic_questions])
+        # prompts.append(
+        #     {
+        #         "custom_id": f"{custom_id_counter}",
+        #         "ID": data.loc[i, "ID"],
+        #         "demographic_info": demographic_info,
+        #         "system_message": f"Imagine you are an expert political scientist (with a PhD) taking notes while observing the following interview: \n\n{demographic_info}",
+        #         "question_prompt": "Write observations/reflections about the interviewee. (You should make more than 5 observations and fewer than 20.",
+        #     }
+        # )
+        ### Configuration for Expert Reflection Political Scientist (END) ###
+
+        ### Configuration for Expert Reflection Demographer (START) ###
+        demographic_info = generate_interview_format(data.loc[i, demographic_questions])
         prompts.append(
             {
                 "custom_id": f"{custom_id_counter}",
                 "ID": data.loc[i, "ID"],
                 "demographic_info": demographic_info,
-                "system_message": f"Below you will be asked to complete some demographic questions, and then answer a question\n\n{demographic_info}",
-                "question_prompt": "Create your backstory based on the information provided. Please describe in detail in first person narration.",
+                "system_message": f"Imagine you are an expert demographer (with a PhD) taking notes while observing the following interview: \n\n{demographic_info}",
+                "question_prompt": "Write observations/reflections about the interviewee. (You should make more than 5 observations and fewer than 20.",
             }
         )
+        ### Configuration for Expert Reflection Demographer (END) ###
+
         custom_id_counter += 1
     prompts = pd.DataFrame(prompts)
 
@@ -223,7 +292,18 @@ def generate_replication_experiment_prompts(
     if include_backstory:
         # Load backstories
         backstories = pd.read_excel(backstory_file_path)
+        # backstories.rename(columns={"expert_reflection_combined":"backstory"}, inplace=True)
         data = pd.merge(left=data, right=backstories[["ID", "backstory"]], on="ID")
+
+    ### Configuration for Interview Summary (START) ###
+    # import os
+    # current_dir = os.path.dirname(__file__)
+    # interview_summary_file_path = os.path.join(
+    #     current_dir, "../results/round9/afrobarometer_r9_ghana_latlong_interviewsummary.xlsx"
+    # )
+    # interview_summary = pd.read_excel(interview_summary_file_path)
+    # data = pd.merge(left=data, right=interview_summary[["ID", "interview_summary"]], on="ID")
+    ### Configuration for Interview Summary (END) ###
 
     # Iterate through the survey data and generate prompts for each question for each user
     prompts = []
@@ -235,8 +315,9 @@ def generate_replication_experiment_prompts(
         else:
             backstory = ""
 
-        question_prompt = f"{question} Please only respond with 'Yes' or 'No' and then clearly explain the reasoning steps you took that led to your response on a new line:"
+        # question_prompt = f"{question} Please only respond with 'Yes' or 'No' and then clearly explain the reasoning steps you took that led to your response on a new line:"
         # question_prompt = f"{question} Please only respond with 'Yes' or 'No'."
+        question_prompt = f"{question}"
 
         prompts.append(
             {
@@ -245,9 +326,10 @@ def generate_replication_experiment_prompts(
                 "survey_context": survey_context,
                 "demographic_info": generate_qna_format(
                     data.loc[i, demographic_questions],
-                    synthetic_experiment=True,  # False if running replication experiment
+                    synthetic_experiment=False,  # TODO False if running replication experiment
                 )
                 + backstory,
+                # "demographic_info": data.loc[i, "interview_summary"],
                 "question": question,
                 "question_prompt": question_prompt,
             }
@@ -421,21 +503,49 @@ def generate_qna_format(
     Returns:
         str: The formatted survey response.
     """
+    # Shuffle the demographic_info Series
+    demographic_info = demographic_info.sample(frac=1)
+
     survey_response = ""
     counter = 1
     for question, response in demographic_info.items():
+        if pd.isnull(response):
+            continue
         survey_response += f"{counter}) Interviewer: {question} Me: {response} "
         counter += 1
 
-    ### Configuration for Afrobarometer and Ghana Wave I (END) ###
-    if synthetic_experiment:
-        survey_response += f"{counter}) Interviewer: Have you received a vaccination against COVID-19, either one or two doses? Me: No"
-    ### Configuration for Afrobarometer and Ghana Wave I (END) ###
+    ### Configuration for Afrobarometer and COVID-19 Vaccination RCT (START) ###
+    # if synthetic_experiment:
+    #     survey_response += f"{counter}) Interviewer: Have you received a vaccination against COVID-19, either one or two doses? Me: No"
+    ### Configuration for Afrobarometer and COVID-19 Vaccination RCT (END) ###
 
-    ### Configuration for Ghana Wave II (END) ###
+    ### Configuration for TB Screening RCT (START) ###
     # if synthetic_experiment:
     #     survey_response += f"{counter}) Interviewer: Have you received a vaccination against Tuberculosis? Me: No"
-    ### Configuration for Ghana Wave II (END) ###
+    ### Configuration for TB Screening RCT (END) ###
+
+    return survey_response
+
+
+def generate_interview_format(demographic_info: pd.Series) -> str:
+    """
+    Formats the demographic information of a subject in an interview/interviewee format.
+
+    Parameters:
+        demographic_info (pd.Series): A pandas Series containing the demographic information of the subject.
+
+    Returns:
+        str: The formatted survey response.
+    """
+    survey_response = ""
+    counter = 1
+    for question, response in demographic_info.items():
+        if pd.isnull(response):
+            continue
+        survey_response += (
+            f"{counter}) Interviewer: {question} Interviewee: {response} "
+        )
+        counter += 1
 
     return survey_response
 
@@ -494,10 +604,18 @@ def construct_system_message(survey_context: str, demographic_prompt: str) -> st
         str: The constructed prompt.
     """
     ### Configuration for Afrobarometer (START) ###
+
+    # Interview Q&A, Interview Summary, Interview + Backstory, Expert Reflection
+    # return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}"
+
+    # Interview + Backstory + Vaccination Context
+    return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou should note that the Health officials in Ghana have been communicating extensively to the population – both urban and rural about the COVID-19 virus. Most of the Ghana population know that the COVID-19 virus is dangerous for their health and they are aware of the benefits of getting the COVID-19 vaccination. However, vaccine hesitancy remain a notable challenge, influenced by misinformation and conspiracy theories circulating on social media. Despite efforts by health authorities to promote vaccination, some individuals remained cautious about the safety and efficacy of COVID-19 vaccines. Educational campaigns and outreach efforts are ongoing, but addressing deep-seated concerns and misinformation required continuous effort. Findings from past studies on COVID-19 vaccination efforts in Ghana reveal a complex interplay of factors influencing vaccine uptake and hesitancy. Positive perceptions of vaccines, belief in their efficacy, knowledge of COVID-19, and a generally favorable attitude toward vaccination significantly boost acceptance. Conversely, concerns about negative side effects, mistrust in vaccine safety, fear, and spiritual or religious beliefs contribute to hesitancy. Demographic factors such as educational attainment, gender, religious affiliation, age, and marital status play crucial roles in shaping attitudes towards vaccination. Higher levels of education, female gender, urban residence, Christian affiliation, and reliance on internet sources for COVID-19 information were associated with higher hesitancy rates. Notably, healthcare workers showed a varied acceptance rate influenced by their role, personal connections to COVID-19 cases, and trust in government measures. Despite efforts to increase coverage, only 40% of Ghanaians had received at least one vaccine dose."
+
+    # Previous strategy
     # return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou should note that the Health officials in Ghana have been communicating extensively to the population – both urban and rural about the COVID-19 virus. Most of the Ghana population know that the COVID-19 virus is dangerous for their health and they are aware of the benefits of getting the COVID-19 vaccination. However, vaccine hesitancy remain a notable challenge, influenced by misinformation and conspiracy theories circulating on social media. Despite efforts by health authorities to promote vaccination, some individuals remained cautious about the safety and efficacy of COVID-19 vaccines. Educational campaigns and outreach efforts are ongoing, but addressing deep-seated concerns and misinformation required continuous effort. Findings from past studies on COVID-19 vaccination efforts in Ghana reveal a complex interplay of factors influencing vaccine uptake and hesitancy. Positive perceptions of vaccines, belief in their efficacy, knowledge of COVID-19, and a generally favorable attitude toward vaccination significantly boost acceptance. Conversely, concerns about negative side effects, mistrust in vaccine safety, fear, and spiritual or religious beliefs contribute to hesitancy. Demographic factors such as educational attainment, gender, religious affiliation, age, and marital status play crucial roles in shaping attitudes towards vaccination. Higher levels of education, female gender, urban residence, Christian affiliation, and reliance on internet sources for COVID-19 information were associated with higher hesitancy rates. Notably, healthcare workers showed a varied acceptance rate influenced by their role, personal connections to COVID-19 cases, and trust in government measures. Despite efforts to increase coverage, only 40% of Ghanaians had received at least one vaccine dose.\n\nYou are asked to watch a video at this point. Here is the transcript of the video:\nThe Sun lights up our lives for business for education even for socializing but when the Sun sets many people use candles who are quality battery-operated torches and kerosene lamps as inefficient and expensive ways to create light. What if you can take some Sun with you at night?  You can with portable solar products there are different types, but each portable solar product is made up of three basic parts: a small solar panel, a modern rechargeable battery and an LED bulb. The solar panel catches the light from the Sun and stores this energy in the battery. This can now be used for much needed light when it's dark. Many can even charge phones portable solar products should be reliable affordable and warranted be sure to demand top quality solar products look for these products lighting Africa shining the way."
 
     # Placebo
-    return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou should note that the Health officials in Ghana have been communicating extensively to the population – both urban and rural about the COVID-19 virus. Most of the Ghana population know that the COVID-19 virus is dangerous for their health and they are aware of the benefits of getting the COVID-19 vaccination. However, vaccine hesitancy remain a notable challenge, influenced by misinformation and conspiracy theories circulating on social media. Despite efforts by health authorities to promote vaccination, some individuals remained cautious about the safety and efficacy of COVID-19 vaccines. Educational campaigns and outreach efforts are ongoing, but addressing deep-seated concerns and misinformation required continuous effort. Findings from past studies on COVID-19 vaccination efforts in Ghana reveal a complex interplay of factors influencing vaccine uptake and hesitancy. Positive perceptions of vaccines, belief in their efficacy, knowledge of COVID-19, and a generally favorable attitude toward vaccination significantly boost acceptance. Conversely, concerns about negative side effects, mistrust in vaccine safety, fear, and spiritual or religious beliefs contribute to hesitancy. Demographic factors such as educational attainment, gender, religious affiliation, age, and marital status play crucial roles in shaping attitudes towards vaccination. Higher levels of education, female gender, urban residence, Christian affiliation, and reliance on internet sources for COVID-19 information were associated with higher hesitancy rates. Notably, healthcare workers showed a varied acceptance rate influenced by their role, personal connections to COVID-19 cases, and trust in government measures. Despite efforts to increase coverage, only 40% of Ghanaians had received at least one vaccine dose.\n\nYou are asked to watch a video at this point. Here is the transcript of the video:\n{treatment_video_transcript['Placebo']}"
+    # return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou should note that the Health officials in Ghana have been communicating extensively to the population – both urban and rural about the COVID-19 virus. Most of the Ghana population know that the COVID-19 virus is dangerous for their health and they are aware of the benefits of getting the COVID-19 vaccination. However, vaccine hesitancy remain a notable challenge, influenced by misinformation and conspiracy theories circulating on social media. Despite efforts by health authorities to promote vaccination, some individuals remained cautious about the safety and efficacy of COVID-19 vaccines. Educational campaigns and outreach efforts are ongoing, but addressing deep-seated concerns and misinformation required continuous effort. Findings from past studies on COVID-19 vaccination efforts in Ghana reveal a complex interplay of factors influencing vaccine uptake and hesitancy. Positive perceptions of vaccines, belief in their efficacy, knowledge of COVID-19, and a generally favorable attitude toward vaccination significantly boost acceptance. Conversely, concerns about negative side effects, mistrust in vaccine safety, fear, and spiritual or religious beliefs contribute to hesitancy. Demographic factors such as educational attainment, gender, religious affiliation, age, and marital status play crucial roles in shaping attitudes towards vaccination. Higher levels of education, female gender, urban residence, Christian affiliation, and reliance on internet sources for COVID-19 information were associated with higher hesitancy rates. Notably, healthcare workers showed a varied acceptance rate influenced by their role, personal connections to COVID-19 cases, and trust in government measures. Despite efforts to increase coverage, only 40% of Ghanaians had received at least one vaccine dose.\n\nYou are asked to watch a video at this point. Here is the transcript of the video:\n{treatment_video_transcript['Placebo']}"
     # CDC Health
     # return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou should note that the Health officials in Ghana have been communicating extensively to the population – both urban and rural about the COVID-19 virus. Most of the Ghana population know that the COVID-19 virus is dangerous for their health and they are aware of the benefits of getting the COVID-19 vaccination. However, vaccine hesitancy remain a notable challenge, influenced by misinformation and conspiracy theories circulating on social media. Despite efforts by health authorities to promote vaccination, some individuals remained cautious about the safety and efficacy of COVID-19 vaccines. Educational campaigns and outreach efforts are ongoing, but addressing deep-seated concerns and misinformation required continuous effort. Findings from past studies on COVID-19 vaccination efforts in Ghana reveal a complex interplay of factors influencing vaccine uptake and hesitancy. Positive perceptions of vaccines, belief in their efficacy, knowledge of COVID-19, and a generally favorable attitude toward vaccination significantly boost acceptance. Conversely, concerns about negative side effects, mistrust in vaccine safety, fear, and spiritual or religious beliefs contribute to hesitancy. Demographic factors such as educational attainment, gender, religious affiliation, age, and marital status play crucial roles in shaping attitudes towards vaccination. Higher levels of education, female gender, urban residence, Christian affiliation, and reliance on internet sources for COVID-19 information were associated with higher hesitancy rates. Notably, healthcare workers showed a varied acceptance rate influenced by their role, personal connections to COVID-19 cases, and trust in government measures. Despite efforts to increase coverage, only 40% of Ghanaians had received at least one vaccine dose.\n\nYou are asked to watch a video at this point. Here is the transcript of the video:\n{treatment_video_transcript['CDC Health']}"
     # Low Cash
@@ -539,13 +657,13 @@ def construct_system_message_with_treatment(
     Returns:
         str: The constructed prompt.
     """
-    ### Configuration for Afrobarometer and Ghana Wave I (START) ###
+    ### Configuration for Afrobarometer and COVID-19 Vaccination RCT (START) ###
     return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou should note that the Health officials in Ghana have been communicating extensively to the population – both urban and rural about the COVID-19 virus. Most of the Ghana population know that the COVID-19 virus is dangerous for their health and they are aware of the benefits of getting the COVID-19 vaccination. However, vaccine hesitancy remain a notable challenge, influenced by misinformation and conspiracy theories circulating on social media. Despite efforts by health authorities to promote vaccination, some individuals remained cautious about the safety and efficacy of COVID-19 vaccines. Educational campaigns and outreach efforts are ongoing, but addressing deep-seated concerns and misinformation required continuous effort. Findings from past studies on COVID-19 vaccination efforts in Ghana reveal a complex interplay of factors influencing vaccine uptake and hesitancy. Positive perceptions of vaccines, belief in their efficacy, knowledge of COVID-19, and a generally favorable attitude toward vaccination significantly boost acceptance. Conversely, concerns about negative side effects, mistrust in vaccine safety, fear, and spiritual or religious beliefs contribute to hesitancy. Demographic factors such as educational attainment, gender, religious affiliation, age, and marital status play crucial roles in shaping attitudes towards vaccination. Higher levels of education, female gender, urban residence, Christian affiliation, and reliance on internet sources for COVID-19 information were associated with higher hesitancy rates. Notably, healthcare workers showed a varied acceptance rate influenced by their role, personal connections to COVID-19 cases, and trust in government measures. Despite efforts to increase coverage, only 40% of Ghanaians had received at least one vaccine dose.\n\nYou are asked to watch a video at this point. Here is the transcript of the video:\n{treatment_video_transcript[treatment]}"
-    ### Configuration for Afrobarometer and Ghana Wave I (END) ###
+    ### Configuration for Afrobarometer and COVID-19 Vaccination RCT (END) ###
 
-    ### Configuration for Afrobarometer and Ghana Wave II (START) ###
+    ### Configuration for Afrobarometer and TB Screening RCT (START) ###
     # return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nHere is the transcript of the video:\n{treatment_video_transcript[treatment]}"
-    ### Configuration for Afrobarometer and Ghana Wave II (END) ###
+    ### Configuration for Afrobarometer and TB Screening RCT (END) ###
 
     ### Configuration for CANDOR (START) ###
     # return f"{survey_context}\nYour demographic profile:\n{demographic_prompt}"

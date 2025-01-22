@@ -205,13 +205,18 @@ def inference_endpoint_query(
             return sanitize_response(row["llm_response"])
 
         # gemma models
-        # messages = [{"role": "user", "content": f"{row[system_message_field]}\n{row[user_message_field]}"}]
+        messages = [
+            {
+                "role": "user",
+                "content": f"{row[system_message_field]}\n{row[user_message_field]}",
+            }
+        ]
 
         # other models
-        messages = [
-            {"role": "system", "content": row[system_message_field]},
-            {"role": "user", "content": row[user_message_field]},
-        ]
+        # messages = [
+        #     {"role": "system", "content": row[system_message_field]},
+        #     {"role": "user", "content": row[user_message_field]},
+        # ]
 
         response = client.chat.completions.create(
             model="tgi",  # TODO when using dedicated inference endpoint
