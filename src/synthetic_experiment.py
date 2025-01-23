@@ -102,9 +102,10 @@ def main(request):
     data_with_responses["user_response"] = data_with_responses[request["question"]]
 
     # Include variable names as new column headers
-    data_with_response_headers = include_variable_names(
-        data_with_responses, data_file_path
-    )
+    if drop_first_row:
+        data_with_response_headers = include_variable_names(
+            data_with_responses, data_file_path
+        )
 
     # Save prompts with responses into Excel file
     prompts_response_file_path = os.path.join(
@@ -245,10 +246,11 @@ if __name__ == "__main__":
     ### Configuration for CANDOR (END) ###
 
     ### Configuration for COVID-19 Vaccination RCT (START) ###
-    # version = "covid_vaccination_rct_synthetic_treatmentXXX_gpt4o"
+    # version = "covid_vaccination_rct_synthetic_treatment_gpt4o_experiment"
     # current_dir = os.path.dirname(__file__)
     # data_file_path = os.path.join(current_dir, "../data/covid_vaccination_rct.csv")
-    # backstory_file_path = os.path.join(current_dir, "../results/round8/covid_vaccination_rct_backstory.xlsx")
+    # backstory_file_path = ""
+    # drop_first_row = False
 
     # input_data = {
     #     "data_file_path": data_file_path,
@@ -282,7 +284,7 @@ if __name__ == "__main__":
     #     ],
     #     "question":"Do you think you will get a first shot of a COVID-19 vaccine within the first 6 weeks after the vaccine becomes available to you?",
 
-    #     "survey_context":"Please put yourself in the shoes of a human subject participating in a healthcare survey in Ghana. You will be provided with a demographic profile that describes your gender, the highest education level you achieved, your household size, your employment status, your financial situation, the number of villages you visited, your usage of WhatsApp and other social media, the distance to your nearest health clinic, and your backstory. The information will be provided to you in the format of a survey interview. You will see a question from the “Interviewer:” and then your human subject response will be preceded by “Me:”. Additionally, we will provide you with some general findings from past studies on Ghana’s COVID-19 vaccination efforts. Lastly, you will watch a video. After you receive your complete human subject profile, you will be asked whether you received the COVID-19 vaccination. Please provide a consistent and coherent response using all the information provided. It is crucial for you to accurately replicate the response of a human subject that has the demographic profile you are provided. The human subject response will vary depending on their demographic profile. If you are unsure of an answer, provide a plausible response that is based on all of the information available to you. Respond to each question in the exact format specified and do not add any information beyond what is requested."
+    #     "survey_context":"Please put yourself in the shoes of a human subject participating in a healthcare survey in Ghana about the COVID-19 vaccine. You will be provided with a demographic profile that describes your XXX. The information will be provided to you in the format of a survey interview. You will see a question from the “Interviewer:” and then your human subject response will be preceded by “Me:”. Lastly, you will watch a video. After you receive your complete human subject profile, you will be asked whether you received the COVID-19 vaccination. Please provide a consistent and coherent response using all the information provided. It is crucial for you to accurately replicate the response of a human subject that has the demographic profile you are provided. The human subject response will vary depending on their demographic profile. If you are unsure of an answer, provide a plausible response that is based on all of the information available to you. Respond to each question in the exact format specified and do not add any information beyond what is requested."
     # }
     ### Configuration for COVID-19 Vaccination RCT (END) ###
 
@@ -323,7 +325,7 @@ if __name__ == "__main__":
     #     ],
     #     "question":"The Health District Tuberculosis screening team will be in your village within the next two weeks. Would you be willing to get the tuberculosis screening, when the Heath District Tuberculosis screening team is in your village?",
 
-    #     "survey_context":"Please put yourself in the shoes of a human subject participating in a healthcare survey in Ghana. You will be provided with a demographic profile that describes your gender, the highest education level you achieved, your household size, your employment status, your financial situation, the number of villages you visited, your usage of WhatsApp and other social media, and your backstory. The information will be provided to you in the format of a survey interview. You will see a question from the “Interviewer:” and then your human subject response will be preceded by “Me:”. Lastly, you will watch a video. After you receive your complete human subject profile, you will be asked whether you are willing to get a screening for Tuberculosis. Please provide a consistent and coherent response using all the information provided. It is crucial for you to accurately replicate the response of a human subject that has the demographic profile you are provided. The human subject response will vary depending on their demographic profile. If you are unsure of an answer, provide a plausible response that is based on all of the information available to you. Respond to each question in the exact format specified and do not add any information beyond what is requested."
+    #     "survey_context":"Please put yourself in the shoes of a human subject participating in a healthcare survey in Ghana about Tuberculosis screening. You will be provided with a demographic profile that describes your XXX. The information will be provided to you in the format of a survey interview. You will see a question from the “Interviewer:” and then your human subject response will be preceded by “Me:”. Lastly, you will watch a video. After you receive your complete human subject profile, you will be asked whether you are willing to get a screening for Tuberculosis. Please provide a consistent and coherent response using all the information provided. It is crucial for you to accurately replicate the response of a human subject that has the demographic profile you are provided. The human subject response will vary depending on their demographic profile. If you are unsure of an answer, provide a plausible response that is based on all of the information available to you. Respond to each question in the exact format specified and do not add any information beyond what is requested."
     # }
     ### Configuration for TB Screening RCT (END) ###
 

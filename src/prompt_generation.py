@@ -315,9 +315,21 @@ def generate_replication_experiment_prompts(
         else:
             backstory = ""
 
-        # question_prompt = f"{question} Please only respond with 'Yes' or 'No' and then clearly explain the reasoning steps you took that led to your response on a new line:"
         # question_prompt = f"{question} Please only respond with 'Yes' or 'No'."
         question_prompt = f"{question}"
+
+        ### Configuration for Step-by-Step Reasoning (START) ###
+#         question_prompt = f"""Please answer the following question by first providing your line of reasoning and then your response using this format: {question}
+#         Reasoning: [Insert your reasoning here]
+#         Response: [Insert your response here]
+#         """ 
+
+#         f"""Please answer the following question in the specified format. Start by providing your line of reasoning, followed by a concise and direct response to the question: {question}
+
+# Expected Format:
+# Reasoning: [Explain your thought process, including any relevant context or logic.]
+# Response: [Provide a clear and concise answer.]"""
+        ### Configuration for Step-by-Step Reasoning (END) ###
 
         prompts.append(
             {
