@@ -20,85 +20,62 @@ def main(request):
 
     # Load and preprocess data
     data = load_data(data_file_path, drop_first_row=drop_first_row)
-    ### Configuration for Afrobarometer (START) ###
     cols_of_interest = ["ID"] + request["demographic_questions"] + [request["question"]]
-    # cols_of_interest = ["ID"] + request["demographic_questions"]
+    # cols_of_interest = ["ID"] + request["demographic_questions"]  # TODO synthetic experiments
+
+    # Generate demographic prompts
+    ### Configuration for Afrobarometer (START) ###
+    prompts = generate_replication_experiment_prompts(
+        data,
+        request["survey_context"],
+        request["demographic_questions"],
+        request["question"],
+        include_backstory=False,  # True if backstory should be included
+        backstory_file_path=request["backstory_file_path"],
+    )
     ### Configuration for Afrobarometer (END) ###
 
-    ### Configuration for COVID-19 Vaccination/TB Screening RCT (START) ###
-    # cols_of_interest = ["ID"] + request["demographic_questions"] + ["Treatment", request["question"]]
-    ### Configuration for COVID-19 Vaccination/TB Screening RCT (END) ###
+    ### Configuration for CANDOR (START) ###
+    # prompts = generate_candor_synthetic_experiment_prompts(
+    #     data,
+    #     request["demographic_questions"],
+    #     request["question"],
+    #     include_backstory=True,  # True if backstory should be included
+    #     backstory_file_path=request["backstory_file_path"],
+    #     supplementary_file_path=request["supplementary_file_path"]
+    # )
+    ### Configuration for CANDOR (END) ###
 
-    # data = clean_data(data, cols_of_interest)
+    ### Configuration for COVID-19 Vaccination RCT (START) ###
+    # data["treatment"] = treatment
+    # prompts = generate_synthetic_experiment_prompts(
+    #     data,
+    #     request["survey_context"],
+    #     request["demographic_questions"],
+    #     request["question"],
+    #     include_backstory=False,  # True if backstory should be included
+    #     backstory_file_path=request["backstory_file_path"]
+    # )
+    ### Configuration for COVID-19 Vaccination RCT (END) ###
 
-    data_with_responses = pd.DataFrame()
-    batch_size = len(data)
-    for i in tqdm(range(0, len(data), batch_size)):
-        batch_data = data.loc[i : i + batch_size, cols_of_interest].reset_index(
-            drop=True
-        )
+    # Perform batch query for survey questions
+    batch_file_dir = create_batch_file(
+        prompts,
+        system_message_field="system_message",
+        user_message_field="question_prompt",
+        batch_file_name="batch_input_llm_replication_experiment.jsonl",
+    )
 
-        # Generate demographic prompts
-        ### Configuration for Afrobarometer (START) ###
-        prompts = generate_replication_experiment_prompts(
-            batch_data,
-            request["survey_context"],
-            request["demographic_questions"],
-            request["question"],
-            include_backstory=False,  # True if backstory should be included
-            backstory_file_path=request["backstory_file_path"],
-        )
-        ### Configuration for Afrobarometer (END) ###
+    llm_responses = batch_query(
+        client,
+        batch_input_file_dir=batch_file_dir,
+        batch_output_file_dir="batch_output_llm_replication_experiment.jsonl",
+    )
 
-        ### Configuration for CANDOR (START) ###
-        # prompts = generate_candor_synthetic_experiment_prompts(
-        #     batch_data,
-        #     request["demographic_questions"],
-        #     request["question"],
-        #     include_backstory=True,  # True if backstory should be included
-        #     backstory_file_path=request["backstory_file_path"],
-        #     supplementary_file_path=request["supplementary_file_path"]
-        # )
-        ### Configuration for CANDOR (END) ###
+    llm_responses.rename(columns={"query_response": "llm_response"}, inplace=True)
 
-        ### Configuration for COVID-19 Vaccination/TB Screening RCT (START) ###
-        # prompts = generate_synthetic_experiment_prompts(
-        #     batch_data,
-        #     request["survey_context"],
-        #     request["demographic_questions"],
-        #     request["question"],
-        #     include_backstory=True,  # True if backstory should be included
-        #     backstory_file_path=request["backstory_file_path"]
-        # )
-        ### Configuration for COVID-19 Vaccination/TB Screening RCT (END) ###
-
-        # Perform batch query for survey questions
-        batch_file_dir = create_batch_file(
-            prompts,
-            system_message_field="system_message",
-            user_message_field="question_prompt",
-            batch_file_name="batch_input_llm_replication_experiment.jsonl",
-        )
-
-        llm_responses = batch_query(
-            client,
-            batch_input_file_dir=batch_file_dir,
-            batch_output_file_dir="batch_output_llm_replication_experiment.jsonl",
-        )
-
-        llm_responses.rename(columns={"query_response": "llm_response"}, inplace=True)
-
-        prompts_with_responses = pd.merge(
-            left=prompts, right=llm_responses, on="custom_id"
-        )
-        batch_data_with_responses = pd.merge(
-            left=batch_data, right=prompts_with_responses, on="ID"
-        )
-
-        data_with_responses = pd.concat(
-            [data_with_responses, batch_data_with_responses], ignore_index=True
-        )
-
+    prompts_with_responses = pd.merge(left=prompts, right=llm_responses, on="custom_id")
+    data_with_responses = pd.merge(left=data, right=prompts_with_responses, on="ID")
     data_with_responses["user_response"] = data_with_responses[request["question"]]
 
     # Include variable names as new column headers

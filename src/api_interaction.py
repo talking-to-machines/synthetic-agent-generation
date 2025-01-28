@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 import re
-from config.settings import HF_TOKEN, HF_HOME
+from config.settings import HF_TOKEN, HF_HOME, DEEPSEEK_API_KEY
 
 os.environ["HF_HOME"] = HF_HOME
 import time
@@ -83,85 +83,7 @@ def batch_query(
     return pd.DataFrame(response_list)
 
 
-def ollama_query(
-    model_name: str,
-    prompts: pd.DataFrame,
-    system_message_field: str,
-    user_message_field: str,
-) -> pd.DataFrame:
-    """
-    Query Llama (hosted locally using Ollama) and return the responses after completion.
-
-    Parameters:
-        ollama_model (str): The Ollama model name
-        prompts (pd.DataFrame): The DataFrame containing prompts.
-        system_message_field (str): The column name indicating the system message.
-        user_message_field (str): The column name indicating the user message.
-
-    Returns:
-        pd.DataFrame: The prompts with the corresponding LLM responses.
-    """
-
-    def query(row: pd.Series):
-        response = ollama.chat(
-            model=model_name,
-            messages=[
-                {"role": "system", "content": row[system_message_field]},
-                {"role": "user", "content": row[user_message_field]},
-            ],
-        )
-        return response["message"]["content"]
-
-    prompts["llm_response"] = prompts.progress_apply(query, axis=1)
-
-    return prompts
-
-
-def serverless_query(
-    model_name: str,
-    prompts: pd.DataFrame,
-    system_message_field: str,
-    user_message_field: str,
-) -> pd.DataFrame:
-    """
-    Query Serverless API and return the responses after completion.
-
-    Parameters:
-        model_name (str): The model name
-        prompts (pd.DataFrame): The DataFrame containing prompts.
-        system_message_field (str): The column name indicating the system message.
-        user_message_field (str): The column name indicating the user message.
-
-    Returns:
-        pd.DataFrame: The prompts with the corresponding LLM responses.
-    """
-    client = InferenceClient(api_key=HF_TOKEN)
-
-    def query(row: pd.Series):
-        if "gemma" in model_name:
-            messages = [
-                {
-                    "role": "user",
-                    "content": f"{row[system_message_field]}\n{row[user_message_field]}",
-                }
-            ]
-        else:
-            messages = [
-                {"role": "system", "content": row[system_message_field]},
-                {"role": "user", "content": row[user_message_field]},
-            ]
-        response = client.chat.completions.create(
-            model=model_name, messages=messages, max_tokens=2048, stream=False
-        )
-
-        return response.choices[0].message["content"]
-
-    prompts["llm_response"] = prompts.progress_apply(query, axis=1)
-
-    return prompts
-
-
-def inference_endpoint_query(
+def hf_deepseek_inference_endpoint_query(
     endpoint_url: str,
     prompts: pd.DataFrame,
     system_message_field: str,
@@ -170,7 +92,7 @@ def inference_endpoint_query(
     experiment_version: str,
 ) -> pd.DataFrame:
     """
-    Query dedicated inference endpoint API and return the responses after completion.
+    Query dedicated inference endpoint API and return the responses after completion for HuggingFace and Deepseek.
 
     Parameters:
         endpoint_url (str): The endpoint URL
@@ -181,7 +103,10 @@ def inference_endpoint_query(
     Returns:
         pd.DataFrame: The prompts with the corresponding LLM responses.
     """
-    client = OpenAI(base_url=endpoint_url, api_key=HF_TOKEN)
+    if endpoint_url == "https://api.deepseek.com":  # Deepseek Inference
+        client = OpenAI(base_url=endpoint_url, api_key=DEEPSEEK_API_KEY)
+    else:  # HuggingFace Inference
+        client = OpenAI(base_url=endpoint_url, api_key=HF_TOKEN)
 
     current_dir = os.path.dirname(__file__)
     progress_file = os.path.join(
@@ -204,19 +129,11 @@ def inference_endpoint_query(
         if not pd.isnull(row["llm_response"]):
             return sanitize_response(row["llm_response"])
 
-        # gemma models
-        messages = [
-            {
-                "role": "user",
-                "content": f"{row[system_message_field]}\n{row[user_message_field]}",
-            }
-        ]
-
         # other models
-        # messages = [
-        #     {"role": "system", "content": row[system_message_field]},
-        #     {"role": "user", "content": row[user_message_field]},
-        # ]
+        messages = [
+            {"role": "system", "content": row[system_message_field]},
+            {"role": "user", "content": row[user_message_field]},
+        ]
 
         response = client.chat.completions.create(
             model="tgi",  # TODO when using dedicated inference endpoint
