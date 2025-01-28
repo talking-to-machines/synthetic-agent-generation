@@ -1,17 +1,24 @@
 import pandas as pd
 import os
 import re
-from config.settings import HF_TOKEN, HF_HOME, DEEPSEEK_API_KEY
+from config.settings import (
+    HF_TOKEN,
+    HF_HOME,
+    DEEPSEEK_API_KEY,
+    ANTROPIC_API_KEY,
+    GEMINI_API_KEY,
+)
 
 os.environ["HF_HOME"] = HF_HOME
 import time
 import json
+import google.generativeai as genai
+from anthropic import Anthropic
 from openai import OpenAI
-import ollama
 from tqdm import tqdm
-from huggingface_hub import InferenceClient
 from huggingface_hub import login
 
+genai.configure(api_key=GEMINI_API_KEY)
 login(token=HF_TOKEN)
 tqdm.pandas()
 
@@ -83,13 +90,14 @@ def batch_query(
     return pd.DataFrame(response_list)
 
 
-def hf_deepseek_inference_endpoint_query(
+def inference_endpoint_query(
     endpoint_url: str,
     prompts: pd.DataFrame,
     system_message_field: str,
     user_message_field: str,
     experiment_round: str,
     experiment_version: str,
+    model_name: str,
 ) -> pd.DataFrame:
     """
     Query dedicated inference endpoint API and return the responses after completion for HuggingFace and Deepseek.
@@ -99,15 +107,13 @@ def hf_deepseek_inference_endpoint_query(
         prompts (pd.DataFrame): The DataFrame containing prompts.
         system_message_field (str): The column name indicating the system message.
         user_message_field (str): The column name indicating the user message.
+        experiment_round (str): The round of the experiment
+        experiment_version (str): The experiment/model version
+        model_name (str): The name of the LLM
 
     Returns:
         pd.DataFrame: The prompts with the corresponding LLM responses.
     """
-    if endpoint_url == "https://api.deepseek.com":  # Deepseek Inference
-        client = OpenAI(base_url=endpoint_url, api_key=DEEPSEEK_API_KEY)
-    else:  # HuggingFace Inference
-        client = OpenAI(base_url=endpoint_url, api_key=HF_TOKEN)
-
     current_dir = os.path.dirname(__file__)
     progress_file = os.path.join(
         current_dir, f"../results/{experiment_round}/progress/{experiment_version}.csv"
@@ -125,11 +131,10 @@ def hf_deepseek_inference_endpoint_query(
     def sanitize_response(response: str) -> str:
         return re.sub(r'[\\/*?:"<>|{}\x00-\x1F\x7F-\x9F]', " ", response)
 
-    def query(row: pd.Series):
+    def hf_query(row: pd.Series):
         if not pd.isnull(row["llm_response"]):
             return sanitize_response(row["llm_response"])
 
-        # other models
         messages = [
             {"role": "system", "content": row[system_message_field]},
             {"role": "user", "content": row[user_message_field]},
@@ -154,6 +159,93 @@ def hf_deepseek_inference_endpoint_query(
 
         return sanitize_response(row["llm_response"])
 
-    prompts["llm_response"] = prompts.progress_apply(query, axis=1)
+    def deepseek_query(row: pd.Series):
+        if not pd.isnull(row["llm_response"]):
+            return sanitize_response(row["llm_response"])
+
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[
+                {"role": "system", "content": row[system_message_field]},
+                {"role": "user", "content": row[user_message_field]},
+            ],
+            stream=False,
+        )
+
+        row["llm_response"] = response.choices[0].message.content
+
+        # Save progress
+        row.to_frame().T.to_csv(
+            progress_file,
+            mode="a",
+            header=not os.path.exists(progress_file),
+            index=False,
+        )
+
+        return sanitize_response(row["llm_response"])
+
+    def claude_query(row: pd.Series):
+        if not pd.isnull(row["llm_response"]):
+            return sanitize_response(row["llm_response"])
+
+        response = client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            # max_tokens=4096,
+            messages=[
+                {"role": "system", "content": row[system_message_field]},
+                {"role": "user", "content": row[user_message_field]},
+            ],
+        )
+
+        row["llm_response"] = response.content
+
+        # Save progress
+        row.to_frame().T.to_csv(
+            progress_file,
+            mode="a",
+            header=not os.path.exists(progress_file),
+            index=False,
+        )
+
+        return sanitize_response(row["llm_response"])
+
+    def gemini_query(row: pd.Series):
+        if not pd.isnull(row["llm_response"]):
+            return sanitize_response(row["llm_response"])
+
+        client = genai.GenerativeModel(
+            model_name="gemini-1.5-pro", system_instruction=row[system_message_field]
+        )
+        response = client.generate_content(row[user_message_field])
+
+        row["llm_response"] = response.text
+
+        # Save progress
+        row.to_frame().T.to_csv(
+            progress_file,
+            mode="a",
+            header=not os.path.exists(progress_file),
+            index=False,
+        )
+
+        return sanitize_response(row["llm_response"])
+
+    if model_name == "huggingface":
+        client = OpenAI(base_url=endpoint_url, api_key=HF_TOKEN)
+        prompts["llm_response"] = prompts.progress_apply(hf_query, axis=1)
+
+    elif model_name == "deepseek":
+        client = OpenAI(base_url="https://api.deepseek.com", api_key=DEEPSEEK_API_KEY)
+        prompts["llm_response"] = prompts.progress_apply(deepseek_query, axis=1)
+
+    elif model_name == "claude":
+        client = Anthropic(api_key=ANTROPIC_API_KEY)
+        prompts["llm_response"] = prompts.progress_apply(claude_query, axis=1)
+
+    elif model_name == "gemini":
+        prompts["llm_response"] = prompts.progress_apply(gemini_query, axis=1)
+
+    else:
+        raise ValueError(f"Model {model_name} is not supported.")
 
     return prompts

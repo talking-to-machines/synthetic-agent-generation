@@ -56,13 +56,14 @@ def main(request):
 
     ### Configuration for HuggingFace and Deepseek (START) ###
     # Perform query for survey questions
-    prompts_with_responses = hf_deepseek_inference_endpoint_query(
-        endpoint_url=request["model_name"],
+    prompts_with_responses = inference_endpoint_query(
+        endpoint_url=request["api_url"],
         prompts=prompts,
         system_message_field="system_message",
         user_message_field="question_prompt",
         experiment_round=request["experiment_round"],
         experiment_version=version,
+        model_name=request["model_name"],
     )
     ### Configuration for HuggingFace and Deepseek (END) ###
 
@@ -94,12 +95,12 @@ if __name__ == "__main__":
     # backstory_file_path = os.path.join(
     #     current_dir, f"../results/{experiment_round}/afrobarometer_backstory.xlsx"
     # )
-    # model_name = ""
+    # api_url = ""
 
     # input_data = {
     #     "data_file_path": data_file_path,
     #     "backstory_file_path": backstory_file_path,
-    #     "model_name": model_name,
+    #     "api_url": api_url,
     #     "experiment_round": experiment_round,
     #     "demographic_questions": [
     #         "Do you come from a rural or urban area?",
@@ -170,12 +171,14 @@ if __name__ == "__main__":
     data_file_path = os.path.join(current_dir, "../data/covid_vaccination_rct.csv")
     backstory_file_path = ""
     treatment = ""
-    model_name = "https://api.deepseek.com"
+    api_url = "https://api.deepseek.com"
+    model_name = "Deepseek"  # huggingface, deepseek, claude, gemini,
     drop_first_row = True
 
     input_data = {
         "data_file_path": data_file_path,
         "backstory_file_path": backstory_file_path,
+        "api_url": api_url,
         "model_name": model_name,
         "experiment_round": experiment_round,
         "demographic_questions": [
