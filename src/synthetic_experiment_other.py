@@ -13,11 +13,13 @@ from src.api_interaction import (
 
 def main(request):
     # Load and preprocess data
-    data = load_data(data_file_path)
-    # cols_of_interest = ["ID"] + request["demographic_questions"] + [request["question"]]  # TODO replication experiment
-    cols_of_interest = ["ID"] + request[
-        "demographic_questions"
-    ]  # TODO synthetic experiment
+    data = load_data(data_file_path, drop_first_row=drop_first_row)
+    # cols_of_interest = (
+    #     ["ID"] + request["demographic_questions"] + [request["question"]]
+    # )  # TODO replication experiment
+    # cols_of_interest = ["ID"] + request[
+    #     "demographic_questions"
+    # ]  # TODO synthetic experiment
 
     # Generate demographic prompts
     ### Configuration for Afrobarometer (START) ###
@@ -43,7 +45,6 @@ def main(request):
     ### Configuration for CANDOR (END) ###
 
     ### Configuration for COVID-19 Vaccination RCT (START) ###
-    data["treatment"] = treatment
     prompts = generate_synthetic_experiment_prompts(
         data,
         request["survey_context"],
@@ -54,7 +55,6 @@ def main(request):
     )
     ### Configuration for COVID-19 Vaccination RCT (END) ###
 
-    ### Configuration for HuggingFace and Deepseek (START) ###
     # Perform query for survey questions
     prompts_with_responses = inference_endpoint_query(
         endpoint_url=request["api_url"],
@@ -65,12 +65,24 @@ def main(request):
         experiment_version=version,
         model_name=request["model_name"],
     )
-    ### Configuration for HuggingFace and Deepseek (END) ###
 
     data_with_responses = pd.merge(
-        left=data[cols_of_interest], right=prompts_with_responses, on="ID"
+        left=data,
+        right=prompts_with_responses,
+        on="ID",
+        suffixes=("", "_y"),
     )
+
+    # For Vaccination Intent
     data_with_responses["user_response"] = data_with_responses[request["question"]]
+
+    # For Vaccination Outcome
+    # data_with_responses["user_response"] = data_with_responses[request["question"][0]]
+    # data_with_responses["user_response_2"] = data_with_responses[request["question"][1]]
+
+    # Include model and experiment information
+    data_with_responses["model"] = model
+    data_with_responses["scenario"] = scenario
 
     # Include variable names as new column headers
     if drop_first_row:
@@ -161,49 +173,74 @@ if __name__ == "__main__":
     # }
     ### Configuration for CANDOR (END) ###
 
-    ### Configuration for COVID-19 RCT (START) ###
-    version = "covid19_rct_synthetic_instruct_XXX"
-    # version = "covid19_rct_synthetic_instructiontuned_XXX"
-    # version = "covid19_rct_synthetic_healthcaretuned_XXX"
-    # version = "covid19_rct_synthetic_rcttuned_XXX"
+    ### Configuration for COVID-19 Vaccination RCT (START) ###
+    version = "vaccine_financial_incentive_vaccinationintention_llama3.1_70b_chainofthought"  # Vaccination Intent
+    # version = "vaccine_financial_incentive_vaccinationstatus_llama3.1_8b_chainofthought"  # Vaccination Outcome
     current_dir = os.path.dirname(__file__)
     experiment_round = "round9"
-    data_file_path = os.path.join(current_dir, "../data/covid_vaccination_rct.csv")
+    scenario = "Chain Of Thought"  # S1 (Instruct Model), S2 (Instruction-Tuned Model), Chain Of Thought, S3 (General Healthcare Context-Tuned Model)
+    model = "Llama 3.1 70B"  # llama3.1_8b, mistral_7b, llama3.1_70b, llama3.3_70b, claude3.5sonnet, gemini1.5pro
+    data_file_path = os.path.join(
+        current_dir,
+        "../data/duch_et_al_2023_vaccine_financial_vaccine_intention_training.csv",
+    )  # Vaccination Intention
+    # data_file_path = os.path.join(
+    #     current_dir,
+    #     "../data/duch_et_al_2023_vaccine_financial_vaccination_status_training.csv",
+    # )  # Vaccination Outcome
     backstory_file_path = ""
-    treatment = ""
-    api_url = "https://api.deepseek.com"
-    model_name = "Deepseek"  # huggingface, deepseek, claude, gemini,
+    treatment_assignment_column = "treatment"
+    # api_url = "https://api.deepseek.com"  # Deepseek
+    api_url = (
+        "https://api-inference.huggingface.co/v1/"  # HF serverless inference endpoint
+    )
+    # api_url = "https://aetp6uymjrg6lw0w.us-east-1.aws.endpoints.huggingface.cloud/v1/"  # HF dedicated inference endpoint
+    model_name = "huggingface"  # huggingface, deepseek, claude, gemini,
     drop_first_row = True
 
     input_data = {
         "data_file_path": data_file_path,
         "backstory_file_path": backstory_file_path,
+        "treatment_assignment_column": treatment_assignment_column,
         "api_url": api_url,
         "model_name": model_name,
         "experiment_round": experiment_round,
         "demographic_questions": [
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
+            "Start Date",
+            "What is your current age?",
+            "What is your gender?",
+            "What is the highest educational qualification you have completed?",
+            "Which region do you live in?",
+            "Which distric do you live in?",
+            "What is the name of the community you live in?",
+            "How many people live in your village?",
+            "What is the distance in km of the nearest health clinic from where you live?",
+            "How many people live in the house together with you (NOT including you) at this moment?",
+            "How many children below 18 years old are currently living in your home?",
+            "What is your current working situation?",
+            "How much (in Ghanaian Cedis) on average does your household spend in a typical week on food?",
+            "How much (in Ghanaian Cedis) on average does your household spend in a typical week on non-food items (electricity, water, rent, school fees)?",
+            "How would you rate the overall economic or financial condition of your household today?",
+            "Do you have a registered mobile number?",
+            "How many family members do you have in another village?",
+            "How many friends and acquaintances who are not part of your family do you have in another village?",
+            "How many individuals can you identify in your social network? Think of friends and relatives that live close to you",
+            "How often do you use social media?",
+            # Only for Vaccination Outcome
+            # "Do you think you will get a first shot of a COVID-19 vaccine within the first 6 weeks after the vaccine becomes available to you?",
+            # "Why will you NOT get vaccinated against COVID-19?",
+            # "We understand that there is always some uncertainty regarding all decisions. From 0% to 100%, what do you think are the chances that you will choose to get a first shot of a COVID-19 vaccine within the first 6 weeks after the vaccine becomes available to you? - 4",
         ],
-        "question": "",
-        "survey_context": "",
+        # Vaccination intent
+        "question": "Do you think you will get a first shot of a COVID-19 vaccine within the first 6 weeks after the vaccine becomes available to you?",
+        "survey_context": "Please put yourself in the shoes of a human subject participating in a healthcare survey in Ghana about the COVID-19 vaccine. You will be provided with a demographic profile that describes your age, gender, highest education level you achieved, region/district you live in, size of your village, distance to nearest health clinic in km, household size, current employment situation, average household spending, household economic/financial condition, number of family members and friends in another village, social network, and social media use. The information will be provided to you in the format of a survey interview. You will see a question from the “Interviewer:” and then your human subject response will be preceded by “Me:”. Lastly, you will watch a video. Thereafter, you will be asked whether you think you will get a first shot of a COVID-19 vaccine within the first 6 weeks after the vaccine becomes available to you. Please provide a consistent and coherent response using all the information provided. It is crucial for you to accurately replicate the response of a human subject that has the demographic profile you are provided. The human subject response will vary depending on their demographic profile. If you are unsure of an answer, provide a plausible response that is based on all of the information available to you. Respond to each question in the exact format specified and do not add any information beyond what is requested.",
+        # Vaccination Outcome
+        # "question": [
+        #     "Have you received a COVID-19 vaccine?",
+        #     "Have you actually received a COVID-19 vaccine and can this be verified in the records of the Ghanaian District Health Offices?"
+        # ],
+        # "survey_context": "Please put yourself in the shoes of a human subject participating in a healthcare survey in Ghana about the COVID-19 vaccine. You will be provided with a demographic profile that describes your age, gender, highest education level you achieved, region/district you live in, size of your village, distance to nearest health clinic in km, household size, current employment situation, average household spending, household economic/financial condition, number of family members and friends in another village, social network, social media use, and vaccination intention. The information will be provided to you in the format of a survey interview. You will see a question from the “Interviewer:” and then your human subject response will be preceded by “Me:”. Lastly, you will watch a video and receive further information on the vaccination intention of your human subject. Thereafter, you will be asked whether you received the COVID-19 vaccination. Please provide a consistent and coherent response using all the information provided. It is crucial for you to accurately replicate the response of a human subject that has the demographic profile you are provided. The human subject response will vary depending on their demographic profile. If you are unsure of an answer, provide a plausible response that is based on all of the information available to you. Respond to each question in the exact format specified and do not add any information beyond what is requested.",
     }
-    ### Configuration for COVID-19 RCT (END) ###
+    ### Configuration for COVID-19 Vaccination RCT (END) ###
 
     main(input_data)

@@ -16,7 +16,7 @@ import google.generativeai as genai
 from anthropic import Anthropic
 from openai import OpenAI
 from tqdm import tqdm
-from huggingface_hub import login
+from huggingface_hub import login, InferenceClient
 
 genai.configure(api_key=GEMINI_API_KEY)
 login(token=HF_TOKEN)
@@ -115,9 +115,14 @@ def inference_endpoint_query(
         pd.DataFrame: The prompts with the corresponding LLM responses.
     """
     current_dir = os.path.dirname(__file__)
+    progress_dir = os.path.join(current_dir, f"../results/{experiment_round}/progress")
     progress_file = os.path.join(
         current_dir, f"../results/{experiment_round}/progress/{experiment_version}.csv"
     )
+
+    # Check and create the progress folder if it doesn't exist
+    os.makedirs(progress_dir, exist_ok=True)
+
     # Load progress if exists
     if os.path.exists(progress_file):
         processed_prompts = pd.read_csv(progress_file)
@@ -141,9 +146,10 @@ def inference_endpoint_query(
         ]
 
         response = client.chat.completions.create(
-            model="tgi",  # TODO when using dedicated inference endpoint
-            # model="meta-llama/Llama-3.1-8B-Instruct",  # TODO When using serverless inference
+            # model="tgi",  # TODO when using dedicated inference endpoint
+            model="meta-llama/Llama-3.1-70B-Instruct",  # TODO When using serverless inference
             messages=messages,
+            # max_tokens=4096,
             stream=False,
         )
 
@@ -190,14 +196,15 @@ def inference_endpoint_query(
 
         response = client.messages.create(
             model="claude-3-5-sonnet-20241022",
-            # max_tokens=4096,
+            max_tokens=4096,
+            system=row[system_message_field],
             messages=[
-                {"role": "system", "content": row[system_message_field]},
                 {"role": "user", "content": row[user_message_field]},
             ],
+            stream=False,
         )
 
-        row["llm_response"] = response.content
+        row["llm_response"] = response.content[0].text
 
         # Save progress
         row.to_frame().T.to_csv(

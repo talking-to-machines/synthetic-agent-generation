@@ -1,4 +1,5 @@
 import pandas as pd
+from typing import Any
 
 question_options = {
     "Over the past year, how often, if ever, have you or anyone in your family gone without Medicines or medical treatment?": [
@@ -76,13 +77,19 @@ question_options = {
 }
 
 treatment_video_transcript = {
+    # Vaccination Intent
     "CDC Health": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID 19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. Getting the COVID-19 vaccine will help prevent you from getting COVID-19 and reduce your risk of being hospitalized with COVID-19. COVID 19 vaccine help you to protect yourself your environment and your loved ones from COVID-19 exposure.",
     "Placebo": "The Sun lights up our lives for business for education even for socializing but when the Sun sets many people use candles who are quality battery-operated torches and kerosene lamps as inefficient and expensive ways to create light. What if you can take some Sun with you at night?  You can with portable solar products there are different types, but each portable solar product is made up of three basic parts: a small solar panel, a modern rechargeable battery and an LED bulb. The solar panel catches the light from the Sun and stores this energy in the battery. This can now be used for much needed light when it's dark. Many can even charge phones portable solar products should be reliable affordable and warranted be sure to demand top quality solar products look for these products lighting Africa shining the way.",
     "Low Cash": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 20 Cedi. If you get vaccinated, you will get rewarded.",
     "High Cash": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 60 Cedi. If you get vaccinated, you will get rewarded.",
-    "TBHealth": "Health authorities are working hard to test people for being at risk of getting ill with Tuberculosis. If you are at risk you will be treated to stop you getting ill with Tuberculosis. The tests and treatment are safe and effective and free for everyone with no strings attached. After you have been tested and treated you will be safe from Tuberculosis. One in four people have sleeping Tuberculosis. If you have sleeping Tuberculosis, you will feel well, but there is a risk that the Tuberculosis bacteria will wake up and give you active Tuberculosis, a serious illness. Getting tested and treated for sleeping Tuberculosis will prevent you from getting active Tuberculosis and reduce your risk of being hospitalized with Tuberculosis. Tuberculosis testing will help you to protect yourself your environment and your loved ones from Tuberculosis exposure. We have two further questions to ask and then the survey will end.",
-    "TBHealthPlus3": "Health authorities are working hard to test people for being at risk of getting ill with Tuberculosis. If you are at risk you will be treated to stop you getting ill with Tuberculosis. The tests and treatment are safe and effective and free for everyone with no strings attached. After you have been tested and treated you will be safe from Tuberculosis. If you show up for the scheduled Tuberculosis testing in your village and get the Tuberculosis test you will receive 20 Cedi. If you get Tuberculosis tested, you will get rewarded. We have two further questions to ask and then the survey will end.",
-    "TBHealthPlusText": "Health authorities are working hard to test people for being at risk of getting ill with Tuberculosis. If you are at risk you will be treated to stop you getting ill with Tuberculosis. The tests and treatment are safe and effective and free for everyone with no strings attached. After you have been tested and treated you will be safe from Tuberculosis. One in four people have sleeping Tuberculosis. If you have sleeping Tuberculosis, you will feel well, but there is a risk that the Tuberculosis bacteria will wake up and give you active Tuberculosis, a serious illness. Getting tested and treated for sleeping Tuberculosis will prevent you from getting active Tuberculosis and reduce your risk of being hospitalized with Tuberculosis. Tuberculosis testing will help you to protect yourself your environment and your loved ones from Tuberculosis exposure. You also received a text message reminding you to go for your Tuberculosis screening appointment. We have two further questions to ask and then the survey will end.",
+    # Vaccination Outcome
+    # "CDC Health": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID 19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. Getting the COVID-19 vaccine will help prevent you from getting COVID-19 and reduce your risk of being hospitalized with COVID-19. COVID 19 vaccine help you to protect yourself your environment and your loved ones from COVID-19 exposure.\n\nWe indicated that we will follow up with you in 6 weeks. We will contact you in order to verify your vaccination status. If you can provide us with your COVID-19 vaccination carnet at the time, we will upload a copy of the vaccination carnet to our secure server for verification",
+    # "Placebo": "The Sun lights up our lives for business for education even for socializing but when the Sun sets many people use candles who are quality battery-operated torches and kerosene lamps as inefficient and expensive ways to create light. What if you can take some Sun with you at night?  You can with portable solar products there are different types, but each portable solar product is made up of three basic parts: a small solar panel, a modern rechargeable battery and an LED bulb. The solar panel catches the light from the Sun and stores this energy in the battery. This can now be used for much needed light when it's dark. Many can even charge phones portable solar products should be reliable affordable and warranted be sure to demand top quality solar products look for these products lighting Africa shining the way.\n\nWe indicated that we will follow up with you in 6 weeks. We will contact you in order to verify your vaccination status.  If you can provide us with your COVID-19 vaccination carnet at the time, we will upload a copy of the vaccination carnet to our secure server for verification.",
+    # "Low Cash": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 20 Cedi. If you get vaccinated, you will get rewarded.\n\nWe indicated that we will follow up with you in 30 days.  We will contact you in order to verify your vaccination status. If you can provide us with your COVID-19 vaccination carnet at the time, we will upload a copy of the vaccination carnet to our secure server for verification and you will be paid your 20 Cedi via cell phone money payment or by cash if you prefer.",
+    # "High Cash": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 60 Cedi. If you get vaccinated, you will get rewarded.\n\nWe indicated that we will follow up with you in 6 weeks.  We will contact you in order to verify your vaccination status. If you can provide us with your COVID-19 vaccination carnet at the time, we will upload a copy of the vaccination carnet to our secure server for verification and you will be paid your 60 Cedi via cell phone money payment or by cash if you prefer.",
+    # "TBHealth": "Health authorities are working hard to test people for being at risk of getting ill with Tuberculosis. If you are at risk you will be treated to stop you getting ill with Tuberculosis. The tests and treatment are safe and effective and free for everyone with no strings attached. After you have been tested and treated you will be safe from Tuberculosis. One in four people have sleeping Tuberculosis. If you have sleeping Tuberculosis, you will feel well, but there is a risk that the Tuberculosis bacteria will wake up and give you active Tuberculosis, a serious illness. Getting tested and treated for sleeping Tuberculosis will prevent you from getting active Tuberculosis and reduce your risk of being hospitalized with Tuberculosis. Tuberculosis testing will help you to protect yourself your environment and your loved ones from Tuberculosis exposure. We have two further questions to ask and then the survey will end.",
+    # "TBHealthPlus3": "Health authorities are working hard to test people for being at risk of getting ill with Tuberculosis. If you are at risk you will be treated to stop you getting ill with Tuberculosis. The tests and treatment are safe and effective and free for everyone with no strings attached. After you have been tested and treated you will be safe from Tuberculosis. If you show up for the scheduled Tuberculosis testing in your village and get the Tuberculosis test you will receive 20 Cedi. If you get Tuberculosis tested, you will get rewarded. We have two further questions to ask and then the survey will end.",
+    # "TBHealthPlusText": "Health authorities are working hard to test people for being at risk of getting ill with Tuberculosis. If you are at risk you will be treated to stop you getting ill with Tuberculosis. The tests and treatment are safe and effective and free for everyone with no strings attached. After you have been tested and treated you will be safe from Tuberculosis. One in four people have sleeping Tuberculosis. If you have sleeping Tuberculosis, you will feel well, but there is a risk that the Tuberculosis bacteria will wake up and give you active Tuberculosis, a serious illness. Getting tested and treated for sleeping Tuberculosis will prevent you from getting active Tuberculosis and reduce your risk of being hospitalized with Tuberculosis. Tuberculosis testing will help you to protect yourself your environment and your loved ones from Tuberculosis exposure. You also received a text message reminding you to go for your Tuberculosis screening appointment. We have two further questions to ask and then the survey will end.",
 }
 
 
@@ -363,7 +370,7 @@ def generate_synthetic_experiment_prompts(
     data: pd.DataFrame,
     survey_context: str,
     demographic_questions: list,
-    question: str,
+    question: Any,
     include_backstory: bool,
     backstory_file_path: str = "",
 ) -> pd.DataFrame:
@@ -374,7 +381,7 @@ def generate_synthetic_experiment_prompts(
         data (pd.DataFrame): The survey data.
         survey_context (str): The context of the survey.
         demographic_questions (list): The list of demographic questions.
-        question (str): The question to be answered.
+        question (Any): The question to be answered.
         include_backstory (bool): Indicates if the subject's backstory should be included.
         backstory_file_path (str): Indicates the file path to the backstory file
 
@@ -385,6 +392,9 @@ def generate_synthetic_experiment_prompts(
         # Load backstories
         backstories = pd.read_excel(backstory_file_path)
         data = pd.merge(left=data, right=backstories[["ID", "backstory"]], on="ID")
+
+    if isinstance(question, list):
+        question = " ".join(question)
 
     # Iterate through the survey data and generate prompts for each question for each user
     prompts = []
@@ -398,7 +408,14 @@ def generate_synthetic_experiment_prompts(
 
         # question_prompt = f"{question} Please only respond with 'Yes' or 'No' and then clearly explain the reasoning steps you took that led to your response on a new line:"
         # question_prompt = f"{question} Please only respond with 'Yes' or 'No'."
-        question_prompt = f"{question}"
+
+        # Vaccination Intention
+        # question_prompt = f"{question} Please only repond with 'Yes', 'No', 'Do not know', or 'Prefer not to say':"
+        question_prompt = f"{question} Please first provide your reasoning based on the information available to you, then give your final response in the structured format below:\nReasoning: [Your reasoning]\nResponse: [Yes/No/Do not know/Prefer not to say]"
+
+        # Vaccination Outcome
+        # question_prompt = f"{question} Please give your response to both questions in the structured format below:\nQuestion 1: [Yes/No]\nQuestion 2: [Yes/No]"
+        # question_prompt = f"{question} Please first provide your reasoning based on the information available to you, then give your final response to both questions in the structured format below:\nReasoning for Question 1: [Your reasoning]\nResponse for Question 1: [Yes/No]\nReasoning for Question 2: [Your reasoning]\nResponse for Question 2: [Yes/No]"
 
         prompts.append(
             {
@@ -407,10 +424,10 @@ def generate_synthetic_experiment_prompts(
                 "survey_context": survey_context,
                 "demographic_info": generate_qna_format(
                     data.loc[i, demographic_questions],
-                    synthetic_experiment=True,
+                    synthetic_experiment=False,
                 )
                 + backstory,
-                "treatment": data.loc[i, "Treatment"],
+                "treatment": data.loc[i, "treatment"],
                 "question": question,
                 "question_prompt": question_prompt,
             }
@@ -522,7 +539,7 @@ def generate_qna_format(
     survey_response = ""
     counter = 1
     for question, response in demographic_info.items():
-        if pd.isnull(response):
+        if pd.isnull(response) or response == "NA":
             continue
         survey_response += f"{counter}) Interviewer: {question} Me: {response} "
         counter += 1
@@ -671,7 +688,7 @@ def construct_system_message_with_treatment(
         str: The constructed prompt.
     """
     ### Configuration for Afrobarometer and COVID-19 Vaccination RCT (START) ###
-    return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou should note that the Health officials in Ghana have been communicating extensively to the population – both urban and rural about the COVID-19 virus. Most of the Ghana population know that the COVID-19 virus is dangerous for their health and they are aware of the benefits of getting the COVID-19 vaccination. However, vaccine hesitancy remain a notable challenge, influenced by misinformation and conspiracy theories circulating on social media. Despite efforts by health authorities to promote vaccination, some individuals remained cautious about the safety and efficacy of COVID-19 vaccines. Educational campaigns and outreach efforts are ongoing, but addressing deep-seated concerns and misinformation required continuous effort. Findings from past studies on COVID-19 vaccination efforts in Ghana reveal a complex interplay of factors influencing vaccine uptake and hesitancy. Positive perceptions of vaccines, belief in their efficacy, knowledge of COVID-19, and a generally favorable attitude toward vaccination significantly boost acceptance. Conversely, concerns about negative side effects, mistrust in vaccine safety, fear, and spiritual or religious beliefs contribute to hesitancy. Demographic factors such as educational attainment, gender, religious affiliation, age, and marital status play crucial roles in shaping attitudes towards vaccination. Higher levels of education, female gender, urban residence, Christian affiliation, and reliance on internet sources for COVID-19 information were associated with higher hesitancy rates. Notably, healthcare workers showed a varied acceptance rate influenced by their role, personal connections to COVID-19 cases, and trust in government measures. Despite efforts to increase coverage, only 40% of Ghanaians had received at least one vaccine dose.\n\nYou are asked to watch a video at this point. Here is the transcript of the video:\n{treatment_video_transcript[treatment]}"
+    return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou are asked to watch a video at this point. Here you are provided with the transcript of the video. You have to read the full transcript in order to continue the survey:\n{treatment_video_transcript[treatment]}"
     ### Configuration for Afrobarometer and COVID-19 Vaccination RCT (END) ###
 
     ### Configuration for Afrobarometer and TB Screening RCT (START) ###

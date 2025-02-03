@@ -100,7 +100,7 @@ def create_batch_file(
             "method": "POST",
             "url": "/v1/chat/completions",
             "body": {
-                "model": "gpt-4o",
+                "model": "gpt-4o-2024-08-06",
                 # "model": "gpt-4o-mini",
                 # "model": "gpt-4-turbo",
                 "temperature": 0,
