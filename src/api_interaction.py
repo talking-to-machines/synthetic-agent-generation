@@ -146,8 +146,8 @@ def inference_endpoint_query(
         ]
 
         response = client.chat.completions.create(
-            # model="tgi",  # TODO when using dedicated inference endpoint
-            model="meta-llama/Llama-3.1-70B-Instruct",  # TODO When using serverless inference
+            model="tgi",  # TODO when using dedicated inference endpoint
+            # model="meta-llama/Llama-3.1-8B-Instruct",  # TODO When using serverless inference
             messages=messages,
             # max_tokens=4096,
             stream=False,
