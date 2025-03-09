@@ -4,9 +4,10 @@ import re
 from config.settings import (
     HF_TOKEN,
     HF_HOME,
-    DEEPSEEK_API_KEY,
     ANTROPIC_API_KEY,
     GEMINI_API_KEY,
+    TOGETHER_API_KEY,
+    GROK_API_KEY,
 )
 
 os.environ["HF_HOME"] = HF_HOME
@@ -16,7 +17,8 @@ import google.generativeai as genai
 from anthropic import Anthropic
 from openai import OpenAI
 from tqdm import tqdm
-from huggingface_hub import login, InferenceClient
+from huggingface_hub import login
+from together import Together
 
 genai.configure(api_key=GEMINI_API_KEY)
 login(token=HF_TOKEN)
@@ -146,8 +148,8 @@ def inference_endpoint_query(
         ]
 
         response = client.chat.completions.create(
-            model="tgi",  # TODO when using dedicated inference endpoint
-            # model="meta-llama/Llama-3.1-8B-Instruct",  # TODO When using serverless inference
+            # model="tgi",  # TODO when using dedicated inference endpoint
+            model="mistralai/Mistral-7B-Instruct-v0.3",  # TODO When using serverless inference
             messages=messages,
             # max_tokens=4096,
             stream=False,
@@ -165,12 +167,12 @@ def inference_endpoint_query(
 
         return sanitize_response(row["llm_response"])
 
-    def deepseek_query(row: pd.Series):
+    def grok_query(row: pd.Series):
         if not pd.isnull(row["llm_response"]):
             return sanitize_response(row["llm_response"])
 
         response = client.chat.completions.create(
-            model="deepseek-chat",
+            model="grok-2-latest",
             messages=[
                 {"role": "system", "content": row[system_message_field]},
                 {"role": "user", "content": row[user_message_field]},
@@ -241,9 +243,13 @@ def inference_endpoint_query(
         client = OpenAI(base_url=endpoint_url, api_key=HF_TOKEN)
         prompts["llm_response"] = prompts.progress_apply(hf_query, axis=1)
 
-    elif model_name == "deepseek":
-        client = OpenAI(base_url="https://api.deepseek.com", api_key=DEEPSEEK_API_KEY)
-        prompts["llm_response"] = prompts.progress_apply(deepseek_query, axis=1)
+    elif model_name == "together":
+        client = Together(api_key=TOGETHER_API_KEY)
+        prompts["llm_response"] = prompts.progress_apply(hf_query, axis=1)
+
+    elif model_name == "grok":
+        client = OpenAI(base_url="https://api.x.ai/v1", api_key=GROK_API_KEY)
+        prompts["llm_response"] = prompts.progress_apply(grok_query, axis=1)
 
     elif model_name == "claude":
         client = Anthropic(api_key=ANTROPIC_API_KEY)

@@ -83,13 +83,14 @@ treatment_video_transcript = {
     # "Low Cash": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 20 Cedi. If you get vaccinated, you will get rewarded.",
     # "High Cash": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 60 Cedi. If you get vaccinated, you will get rewarded.",
     # Vaccination Outcome
-    "CDC Health": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID 19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. Getting the COVID-19 vaccine will help prevent you from getting COVID-19 and reduce your risk of being hospitalized with COVID-19. COVID 19 vaccine help you to protect yourself your environment and your loved ones from COVID-19 exposure.\n\nWe indicated that we will follow up with you in 6 weeks. We will contact you in order to verify your vaccination status. If you can provide us with your COVID-19 vaccination carnet at the time, we will upload a copy of the vaccination carnet to our secure server for verification",
-    "Placebo": "The Sun lights up our lives for business for education even for socializing but when the Sun sets many people use candles who are quality battery-operated torches and kerosene lamps as inefficient and expensive ways to create light. What if you can take some Sun with you at night?  You can with portable solar products there are different types, but each portable solar product is made up of three basic parts: a small solar panel, a modern rechargeable battery and an LED bulb. The solar panel catches the light from the Sun and stores this energy in the battery. This can now be used for much needed light when it's dark. Many can even charge phones portable solar products should be reliable affordable and warranted be sure to demand top quality solar products look for these products lighting Africa shining the way.\n\nWe indicated that we will follow up with you in 6 weeks. We will contact you in order to verify your vaccination status.  If you can provide us with your COVID-19 vaccination carnet at the time, we will upload a copy of the vaccination carnet to our secure server for verification.",
-    "Low Cash": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 20 Cedi. If you get vaccinated, you will get rewarded.\n\nWe indicated that we will follow up with you in 30 days.  We will contact you in order to verify your vaccination status. If you can provide us with your COVID-19 vaccination carnet at the time, we will upload a copy of the vaccination carnet to our secure server for verification and you will be paid your 20 Cedi via cell phone money payment or by cash if you prefer.",
-    "High Cash": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 60 Cedi. If you get vaccinated, you will get rewarded.\n\nWe indicated that we will follow up with you in 6 weeks.  We will contact you in order to verify your vaccination status. If you can provide us with your COVID-19 vaccination carnet at the time, we will upload a copy of the vaccination carnet to our secure server for verification and you will be paid your 60 Cedi via cell phone money payment or by cash if you prefer.",
-    # "TBHealth": "Health authorities are working hard to test people for being at risk of getting ill with Tuberculosis. If you are at risk you will be treated to stop you getting ill with Tuberculosis. The tests and treatment are safe and effective and free for everyone with no strings attached. After you have been tested and treated you will be safe from Tuberculosis. One in four people have sleeping Tuberculosis. If you have sleeping Tuberculosis, you will feel well, but there is a risk that the Tuberculosis bacteria will wake up and give you active Tuberculosis, a serious illness. Getting tested and treated for sleeping Tuberculosis will prevent you from getting active Tuberculosis and reduce your risk of being hospitalized with Tuberculosis. Tuberculosis testing will help you to protect yourself your environment and your loved ones from Tuberculosis exposure. We have two further questions to ask and then the survey will end.",
-    # "TBHealthPlus3": "Health authorities are working hard to test people for being at risk of getting ill with Tuberculosis. If you are at risk you will be treated to stop you getting ill with Tuberculosis. The tests and treatment are safe and effective and free for everyone with no strings attached. After you have been tested and treated you will be safe from Tuberculosis. If you show up for the scheduled Tuberculosis testing in your village and get the Tuberculosis test you will receive 20 Cedi. If you get Tuberculosis tested, you will get rewarded. We have two further questions to ask and then the survey will end.",
-    # "TBHealthPlusText": "Health authorities are working hard to test people for being at risk of getting ill with Tuberculosis. If you are at risk you will be treated to stop you getting ill with Tuberculosis. The tests and treatment are safe and effective and free for everyone with no strings attached. After you have been tested and treated you will be safe from Tuberculosis. One in four people have sleeping Tuberculosis. If you have sleeping Tuberculosis, you will feel well, but there is a risk that the Tuberculosis bacteria will wake up and give you active Tuberculosis, a serious illness. Getting tested and treated for sleeping Tuberculosis will prevent you from getting active Tuberculosis and reduce your risk of being hospitalized with Tuberculosis. Tuberculosis testing will help you to protect yourself your environment and your loved ones from Tuberculosis exposure. You also received a text message reminding you to go for your Tuberculosis screening appointment. We have two further questions to ask and then the survey will end.",
+    # "CDC Health": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID 19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. Getting the COVID-19 vaccine will help prevent you from getting COVID-19 and reduce your risk of being hospitalized with COVID-19. COVID 19 vaccine help you to protect yourself your environment and your loved ones from COVID-19 exposure.\n\nWe indicated that we will follow up with you in 6 weeks. We will contact you in order to verify your vaccination status. If you can provide us with your COVID-19 vaccination carnet at the time, we will upload a copy of the vaccination carnet to our secure server for verification",
+    # "Placebo": "The Sun lights up our lives for business for education even for socializing but when the Sun sets many people use candles who are quality battery-operated torches and kerosene lamps as inefficient and expensive ways to create light. What if you can take some Sun with you at night?  You can with portable solar products there are different types, but each portable solar product is made up of three basic parts: a small solar panel, a modern rechargeable battery and an LED bulb. The solar panel catches the light from the Sun and stores this energy in the battery. This can now be used for much needed light when it's dark. Many can even charge phones portable solar products should be reliable affordable and warranted be sure to demand top quality solar products look for these products lighting Africa shining the way.\n\nWe indicated that we will follow up with you in 6 weeks. We will contact you in order to verify your vaccination status.  If you can provide us with your COVID-19 vaccination carnet at the time, we will upload a copy of the vaccination carnet to our secure server for verification.",
+    # "Low Cash": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 20 Cedi. If you get vaccinated, you will get rewarded.\n\nWe indicated that we will follow up with you in 30 days.  We will contact you in order to verify your vaccination status. If you can provide us with your COVID-19 vaccination carnet at the time, we will upload a copy of the vaccination carnet to our secure server for verification and you will be paid your 20 Cedi via cell phone money payment or by cash if you prefer.",
+    # "High Cash": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 60 Cedi. If you get vaccinated, you will get rewarded.\n\nWe indicated that we will follow up with you in 6 weeks.  We will contact you in order to verify your vaccination status. If you can provide us with your COVID-19 vaccination carnet at the time, we will upload a copy of the vaccination carnet to our secure server for verification and you will be paid your 60 Cedi via cell phone money payment or by cash if you prefer.",
+    # TB Screening
+    "tbhealth": "Health authorities are working hard to test people for being at risk of getting ill with tuberculosis. If you are at risk you will be treated to stop you getting ill with tuberculosis. The tests and treatment are safe and effective and free for everyone with no strings attached. After you have been tested and treated you will be safe from tuberculosis. One in four people have sleeping tuberculosis. If you have sleeping tuberculosis, you will feel well, but there is a risk that the tuberculosis bacteria will wake up and give you active tuberculosis, a serious illness. Getting tested and treated for sleeping tuberculosis will prevent you from getting active tuberculosis and reduce your risk of being hospitalized with tuberculosis. Tuberculosis testing will help you to protect yourself and your environment and your loved ones from tuberculosis exposure.",
+    "tbhealthplus3": "Health authorities are working hard to test people for being at risk of getting ill with tuberculosis. If you are at risk you will be treated to stop you getting ill with tuberculosis. The tests and treatment are safe and effective and free for everyone with no strings attached. After you have been tested and treated you will be safe from tuberculosis. If you show up for the scheduled tuberculosis testing in your village and get the tuberculosis test you will receive 20 Cedi. If you get tuberculosis tested, you will get rewarded.",
+    "tbhealthplustext": "Health authorities are working hard to test people for being at risk of getting ill with tuberculosis. If you are at risk you will be treated to stop you getting ill with tuberculosis. The tests and treatment are safe and effective and free for everyone with no strings attached. After you have been tested and treated you will be safe from tuberculosis. One in four people have sleeping tuberculosis. If you have sleeping tuberculosis, you will feel well, but there is a risk that the tuberculosis bacteria will wake up and give you active tuberculosis, a serious illness. Getting tested and treated for sleeping tuberculosis will prevent you from getting active tuberculosis and reduce your risk of being hospitalized with tuberculosis. Tuberculosis testing will help you to protect yourself and your environment and your loved ones from tuberculosis exposure. You also received a telephone call reminding you to go for your tuberculosis screening appointment.",
 }
 
 
@@ -256,17 +257,30 @@ def generate_backstory_prompts(
         ### Configuration for Expert Reflection Political Scientist (END) ###
 
         ### Configuration for Expert Reflection Demographer (START) ###
+        # demographic_info = generate_interview_format(data.loc[i, demographic_questions])
+        # prompts.append(
+        #     {
+        #         "custom_id": f"{custom_id_counter}",
+        #         "ID": data.loc[i, "ID"],
+        #         "demographic_info": demographic_info,
+        #         "system_message": f"Imagine you are an expert demographer (with a PhD) taking notes while observing the following interview: \n\n{demographic_info}",
+        #         "question_prompt": "Write observations/reflections about the interviewee. (You should make more than 5 observations and fewer than 20.",
+        #     }
+        # )
+        ### Configuration for Expert Reflection Demographer (END) ###
+
+        ### Configuration for Demographic Profile in 1st Person (START) ###
         demographic_info = generate_interview_format(data.loc[i, demographic_questions])
         prompts.append(
             {
                 "custom_id": f"{custom_id_counter}",
                 "ID": data.loc[i, "ID"],
                 "demographic_info": demographic_info,
-                "system_message": f"Imagine you are an expert demographer (with a PhD) taking notes while observing the following interview: \n\n{demographic_info}",
-                "question_prompt": "Write observations/reflections about the interviewee. (You should make more than 5 observations and fewer than 20.",
+                "system_message": f"Here is a conversation between an interviewer and an interviewee\n\n{demographic_info}",
+                "question_prompt": "Succinctly summarize the facts about the interviewee based on the conversation in first person narration starting with 'You are...'.",
             }
         )
-        ### Configuration for Expert Reflection Demographer (END) ###
+        ### Configuration for Demographic Profile in 1st Person (END) ###
 
         custom_id_counter += 1
     prompts = pd.DataFrame(prompts)
@@ -396,6 +410,17 @@ def generate_synthetic_experiment_prompts(
     if isinstance(question, list):
         question = " ".join(question)
 
+    ### Configuration for Demographic Profile in First Person (START) ###
+    # import os
+    # current_dir = os.path.dirname(__file__)
+    # demographic_profile_file_path = os.path.join(
+    #     # current_dir, "../results/round9/vaccine_financial_incentive_vaccinationintention_demographic_firstperson.xlsx"  # For Vaccine Intention
+    #     current_dir, "../results/round9/vaccine_financial_incentive_vaccinationstatus_demographic_firstperson.xlsx"  # For Vaccine Status
+    # )
+    # demographic_profile_firstperson = pd.read_excel(demographic_profile_file_path)
+    # data = pd.merge(left=data, right=demographic_profile_firstperson[["ID", "demographic_profile_firstperson"]], on="ID")
+    ### Configuration for Demographic Profile in First Person (END) ###
+
     # Iterate through the survey data and generate prompts for each question for each user
     prompts = []
     custom_id_counter = 0
@@ -410,12 +435,17 @@ def generate_synthetic_experiment_prompts(
         # question_prompt = f"{question} Please only respond with 'Yes' or 'No'."
 
         # Vaccination Intention
-        # question_prompt = f"{question} Please only repond with 'Yes', 'No', 'Do not know', or 'Prefer not to say':"
+        # question_prompt = f"{question} Please only respond with 'Yes', 'No', 'Do not know', or 'Prefer not to say':"
         # question_prompt = f"{question} Please first provide your reasoning based on the information available to you, then give your final response in the structured format below:\nReasoning: [Your reasoning]\nResponse: [Yes/No/Do not know/Prefer not to say]"
+        # question_prompt = f"The next page of the survey says: {question} Please only respond with 'Yes', 'No', 'Do not know', or 'Prefer not to say'.\nYou choose:"
 
         # Vaccination Outcome
-        question_prompt = f"{question} Please give your response to both questions in the structured format below:\nQuestion 1: [Yes/No]\nQuestion 2: [Yes/No]"
+        # question_prompt = f"{question} Please give your response to both questions in the structured format below:\nQuestion 1: [Yes/No]\nQuestion 2: [Yes/No]"
         # question_prompt = f"{question} Please first provide your reasoning based on the information available to you, then give your final response to both questions in the structured format below:\nReasoning for Question 1: [Your reasoning]\nResponse for Question 1: [Yes/No]\nReasoning for Question 2: [Your reasoning]\nResponse for Question 2: [Yes/No]"
+        # question_prompt = f"The next page of the survey says: {question} Please provide your response to both questions in the structured format below:\nQuestion 1: [Yes/No]\nQuestion 2: [Yes/No]"
+
+        # TB Screening
+        question_prompt = f"{question} Please give your response to both questions in the structured format below:\nQuestion 1: [Yes/No/Do not know/Prefer not to say]\nQuestion 2: [Yes/No]"
 
         prompts.append(
             {
@@ -427,6 +457,7 @@ def generate_synthetic_experiment_prompts(
                     synthetic_experiment=False,
                 )
                 + backstory,
+                # "demographic_info": data.loc[i, "demographic_profile_firstperson"],  # For Predicting Treatment Effect
                 "treatment": data.loc[i, "treatment"],
                 "question": question,
                 "question_prompt": question_prompt,
@@ -541,6 +572,10 @@ def generate_qna_format(
     for question, response in demographic_info.items():
         if pd.isnull(response) or response == "NA":
             continue
+
+        if type(response) == str and "\n" in response:
+            response = response.split("\n")[0].replace("\r", "")
+
         survey_response += f"{counter}) Interviewer: {question} Me: {response} "
         counter += 1
 
@@ -688,12 +723,20 @@ def construct_system_message_with_treatment(
         str: The constructed prompt.
     """
     ### Configuration for Afrobarometer and COVID-19 Vaccination RCT (START) ###
-    return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou are asked to watch a video at this point. Here you are provided with the transcript of the video. You have to read the full transcript in order to continue the survey:\n{treatment_video_transcript[treatment]}"
+    # return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou are asked to watch a video at this point. Here you are provided with the transcript of the video. You have to read the full transcript in order to continue the survey:\n{treatment_video_transcript[treatment]}"
     ### Configuration for Afrobarometer and COVID-19 Vaccination RCT (END) ###
 
-    ### Configuration for Afrobarometer and TB Screening RCT (START) ###
+    ### Configuration for TB Screening RCT (START) ###
+    return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nIn your area, an initiative was implemented that consisted in bringing pop-up tuberculosis clinics in several villages - including yours - so that most villagers could walk to the clinics within minutes.\n\nWhen you were informed of the initiative, you were also presented with a video message. Here is the transcript of the video:\n{treatment_video_transcript[treatment]}"
+    ### Configuration for TB Screening RCT (END) ###
+
+    ### Configuration for Predicting Treatment Effect (START) ###
+    # return f"{survey_context}\n\n{demographic_prompt}\nThe first page of the survey involves watching a video with the following transcript: {treatment_video_transcript[treatment]}"
+    ### Configuration for Predicting Treatment Effect (END) ###
+
+    ### Configuration for Afrobarometer (START) ###
     # return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nHere is the transcript of the video:\n{treatment_video_transcript[treatment]}"
-    ### Configuration for Afrobarometer and TB Screening RCT (END) ###
+    ### Configuration for Afrobarometer (END) ###
 
     ### Configuration for CANDOR (START) ###
     # return f"{survey_context}\nYour demographic profile:\n{demographic_prompt}"
