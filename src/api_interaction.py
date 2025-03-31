@@ -148,8 +148,8 @@ def inference_endpoint_query(
         ]
 
         response = client.chat.completions.create(
-            # model="tgi",  # TODO when using dedicated inference endpoint
-            model="mistralai/Mistral-7B-Instruct-v0.3",  # TODO When using serverless inference
+            model="tgi",  # TODO when using dedicated inference endpoint
+            # model="mistralai/Mistral-7B-Instruct-v0.3",  # TODO When using serverless inference
             messages=messages,
             # max_tokens=4096,
             stream=False,
