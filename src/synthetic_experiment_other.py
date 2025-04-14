@@ -14,12 +14,6 @@ from src.api_interaction import (
 def main(request):
     # Load and preprocess data
     data = load_data(data_file_path, drop_first_row=drop_first_row)
-    # cols_of_interest = (
-    #     ["ID"] + request["demographic_questions"] + [request["question"]]
-    # )  # TODO replication experiment
-    # cols_of_interest = ["ID"] + request[
-    #     "demographic_questions"
-    # ]  # TODO synthetic experiment
 
     # Generate demographic prompts
     ### Configuration for Afrobarometer (START) ###
@@ -32,17 +26,6 @@ def main(request):
     #     backstory_file_path=request["backstory_file_path"],
     # )
     ### Configuration for Afrobarometer (END) ###
-
-    ### Configuration for CANDOR (START) ###
-    # prompts = generate_candor_synthetic_experiment_prompts(
-    #     data,
-    #     request["demographic_questions"],
-    #     request["question"],
-    #     include_backstory=True,  # True if backstory should be included
-    #     backstory_file_path=request["backstory_file_path"],
-    #     supplementary_file_path=request["supplementary_file_path"]
-    # )
-    ### Configuration for CANDOR (END) ###
 
     ### Configuration for COVID-19 Vaccination RCT and TB Screening RCT (START) ###
     prompts = generate_synthetic_experiment_prompts(
@@ -72,9 +55,6 @@ def main(request):
         on="ID",
         suffixes=("", "_y"),
     )
-
-    # For Vaccination Intent
-    # data_with_responses["user_response"] = data_with_responses[request["question"]]
 
     # For Vaccination Outcome and TB Vaccination
     data_with_responses["user_response"] = data_with_responses[request["question"][0]]
@@ -139,58 +119,19 @@ if __name__ == "__main__":
     # }
     ### Configuration for Afrobarometer (END) ###
 
-    ### Configuration for CANDOR (START) ###
-    # version = "candor_synthetic_backstory+cotreasoning_highcash_sample_600"
-    # current_dir = os.path.dirname(__file__)
-    # experiment_round = "round8"
-    # data_file_path = os.path.join(current_dir, "../data/candor_sample_600.xlsx")
-    # backstory_file_path = os.path.join(current_dir, f"../results/{experiment_round}/candor_backstory_5countries.xlsx")
-    # supplementary_file_path = os.path.join(current_dir, f"../results/{experiment_round}/candor_supplementary.xlsx")
-
-    # input_data = {
-    #     "data_file_path": data_file_path,
-    #     "backstory_file_path": backstory_file_path,
-    #     "supplementary_file_path":supplementary_file_path,
-    #     "demographic_questions": [
-    #         'What is your gender?',
-    #         'What is your age?',
-    #         "The following is a scale from 0 to 10 that goes from left to right, where 0 means 'Left' and 10 means 'Right'. Today when talking about political trends, many people talk about those who are more sympathetic to the left or the right. According to the sense that the terms 'Left' and 'Right' have for you when you think about your political point of view, where would you find yourself on this scale?",
-    #         'Gross HOUSEHOLD income combines your gross income with that of your partner or any other household member with whom you share financial responsibilities BEFORE any taxes are paid and BEFORE any benefits are obtained. What is your gross annual household income?',
-    #         'Thinking back to 12 months ago, has your household income increased or decreased since then?',
-    #         'We would like to know how good or bad your health is TODAY. How would you rate your health today on a scale numbered 0 to 100? 100 means the best health you can imagine. 0 means the worst health you can imagine.',
-    #         'What is the highest degree or level of education you have completed?',
-    #         'Do you have any dependent children who live with you? (By "dependent" children, we mean those who are not yet financially independent).',
-    #         'Are you currently married, in a civil partnership, or living with a partner?',
-    #         'Would you vote to re-elect this government in the next election?',
-    #         'Overall, how would you rate the current government on a scale of 0 (very low rating) to 100 (very high rating)?',
-    #         'Where in the country do you live?',
-    #         'country'
-    #     ],
-    #     # "question":"Since you watched this video six weeks ago, do you think you will get a first shot of a COVID-19 vaccine if the vaccine becomes available to you?",
-    #     "question":"You watched this video six weeks ago. Think about the content of the video and consider all the information you have been given. Between six weeks ago and now did you receive a COVID-19 vaccine?",
-
-    #     "survey_context":""
-    # }
-    ### Configuration for CANDOR (END) ###
-
     ### Configuration for COVID-19 Vaccination RCT (START) ###
-    # version = "vaccine_financial_incentive_vaccinationintention_deepseek_qwen_14b_s1"  # Vaccination Intent
-    version = "vaccine_financial_incentive_vaccinationstatus_llama3.1_8b_s3_updated"  # Vaccination Outcome
+    version = "vaccine_financial_incentive_vaccinationstatus_llama3.1_70b_s4_updated"  # Vaccination Outcome
     current_dir = os.path.dirname(__file__)
     experiment_round = "round9"
-    scenario = "S3 (LMIC Survey)"  # S1 (Instruct Model), S2 (Instruction-Tuned Model), S3 (LMIC Survey), S4 (LMIC RCT), S5 (LMIC Survey + RCT), S6 (LMIC Pilot), S7 (LMIC Survey + RCT + Pilot)
-    model = "Llama 3.1 8B"  # Llama 3.1 8B, Mistral 7B, Mistral 24B, Llama 3.1 70B, Llama 3.3 70B, Claude 3.5 Sonnet, Gemini 1.5 Pro, DeepSeek R1, DeepSeek R1 Distilled Llama 3.3 70B, Deepseek R1 Distilled Qwen 14B
-    # data_file_path = os.path.join(
-    #     current_dir,
-    #     "../data/duch_et_al_2023_vaccine_financial_vaccine_intention_training.csv",
-    # )  # Vaccination Intention
+    scenario = "S4 (LMIC RCT)"  # S1 (Instruct Model), S2 (Instruction-Tuned Model), S3 (LMIC Survey), S4 (LMIC RCT), S5 (LMIC Survey + RCT), S6 (LMIC Pilot), S7 (LMIC Survey + RCT + Pilot)
+    model = "Llama 3.1 70B"  # Llama 3.1 8B, Mistral 7B, Llama 3.1 70B, Claude 3.5 Sonnet, Gemini 1.5 Pro, Grok 2, DeepSeek R1, DeepSeek R1 Distilled Llama 3.3 70B, Deepseek R1 Distilled Qwen 14B
     data_file_path = os.path.join(
         current_dir,
         "../data/duch_et_al_2023_vaccine_financial_vaccination_status_training.csv",
     )  # Vaccination Outcome
     backstory_file_path = ""
     treatment_assignment_column = "treatment"
-    api_url = "https://ic9nt76e9ubp7sap.us-east-1.aws.endpoints.huggingface.cloud/v1/"  # HF dedicated inference endpoint
+    api_url = "https://rx34inta3kkn6nrl.us-east-1.aws.endpoints.huggingface.cloud/v1/"  # HF dedicated inference endpoint
     model_name = "huggingface"  # huggingface, claude, gemini, together, grok
     drop_first_row = True
 
@@ -223,10 +164,6 @@ if __name__ == "__main__":
             "How many individuals can you identify in your social network? Think of friends and relatives that live close to you",
             "How often do you use social media?",
         ],
-        # Vaccination intent
-        # "question": "Do you think you will get a first shot of a COVID-19 vaccine within the first 6 weeks after the vaccine becomes available to you?",
-        # "survey_context": "Please put yourself in the shoes of a human subject participating in a healthcare survey in Ghana about the COVID-19 vaccine. You will be provided with a demographic profile that describes your age, gender, highest education level you achieved, region/district you live in, size of your village, distance to nearest health clinic in km, household size, current employment situation, average household spending, household economic/financial condition, number of family members and friends in another village, social network, and social media use. The information will be provided to you in the format of a survey interview. You will see a question from the “Interviewer:” and then your human subject response will be preceded by “Me:”. Lastly, you will watch a video. Thereafter, you will be asked whether you think you will get a first shot of a COVID-19 vaccine within the first 6 weeks after the vaccine becomes available to you. Please provide a consistent and coherent response using all the information provided. It is crucial for you to accurately replicate the response of a human subject that has the demographic profile you are provided. The human subject response will vary depending on their demographic profile. If you are unsure of an answer, provide a plausible response that is based on all of the information available to you. Respond to each question in the exact format specified and do not add any information beyond what is requested.",
-        # Vaccination Outcome
         "question": [
             "Have you received a COVID-19 vaccine?",
             "Have you actually received a COVID-19 vaccine and can this be verified in the records of the Ghanaian District Health Offices?",

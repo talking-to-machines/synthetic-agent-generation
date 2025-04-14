@@ -77,11 +77,6 @@ question_options = {
 }
 
 treatment_video_transcript = {
-    # Vaccination Intent
-    # "CDC Health": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID 19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. Getting the COVID-19 vaccine will help prevent you from getting COVID-19 and reduce your risk of being hospitalized with COVID-19. COVID 19 vaccine help you to protect yourself your environment and your loved ones from COVID-19 exposure.",
-    # "Placebo": "The Sun lights up our lives for business for education even for socializing but when the Sun sets many people use candles who are quality battery-operated torches and kerosene lamps as inefficient and expensive ways to create light. What if you can take some Sun with you at night?  You can with portable solar products there are different types, but each portable solar product is made up of three basic parts: a small solar panel, a modern rechargeable battery and an LED bulb. The solar panel catches the light from the Sun and stores this energy in the battery. This can now be used for much needed light when it's dark. Many can even charge phones portable solar products should be reliable affordable and warranted be sure to demand top quality solar products look for these products lighting Africa shining the way.",
-    # "Low Cash": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 20 Cedi. If you get vaccinated, you will get rewarded.",
-    # "High Cash": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID-19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. If you have at least one COVID-19 vaccine shot you will receive 60 Cedi. If you get vaccinated, you will get rewarded.",
     # Vaccination Outcome
     "CDC Health": "Health authorities are working hard to distribute the COVID-19 vaccines free for everyone with no strings attached. COVID 19 vaccines are safe and effective. After you have been fully vaccinated you can resume activities that you did prior to the pandemic. Getting the COVID-19 vaccine will help prevent you from getting COVID-19 and reduce your risk of being hospitalized with COVID-19. COVID 19 vaccine help you to protect yourself your environment and your loved ones from COVID-19 exposure.\n\nWe indicated that we will follow up with you in 6 weeks. We will contact you in order to verify your vaccination status. If you can provide us with your COVID-19 vaccination carnet at the time, we will upload a copy of the vaccination carnet to our secure server for verification",
     "Placebo": "The Sun lights up our lives for business for education even for socializing but when the Sun sets many people use candles who are quality battery-operated torches and kerosene lamps as inefficient and expensive ways to create light. What if you can take some Sun with you at night?  You can with portable solar products there are different types, but each portable solar product is made up of three basic parts: a small solar panel, a modern rechargeable battery and an LED bulb. The solar panel catches the light from the Sun and stores this energy in the battery. This can now be used for much needed light when it's dark. Many can even charge phones portable solar products should be reliable affordable and warranted be sure to demand top quality solar products look for these products lighting Africa shining the way.\n\nWe indicated that we will follow up with you in 6 weeks. We will contact you in order to verify your vaccination status.  If you can provide us with your COVID-19 vaccination carnet at the time, we will upload a copy of the vaccination carnet to our secure server for verification.",
@@ -436,17 +431,6 @@ def generate_synthetic_experiment_prompts(
     if isinstance(question, list):
         question = " ".join(question)
 
-    ### Configuration for Demographic Profile in First Person (START) ###
-    # import os
-    # current_dir = os.path.dirname(__file__)
-    # demographic_profile_file_path = os.path.join(
-    #     # current_dir, "../results/round9/vaccine_financial_incentive_vaccinationintention_demographic_firstperson.xlsx"  # For Vaccine Intention
-    #     current_dir, "../results/round9/vaccine_financial_incentive_vaccinationstatus_demographic_firstperson.xlsx"  # For Vaccine Status
-    # )
-    # demographic_profile_firstperson = pd.read_excel(demographic_profile_file_path)
-    # data = pd.merge(left=data, right=demographic_profile_firstperson[["ID", "demographic_profile_firstperson"]], on="ID")
-    ### Configuration for Demographic Profile in First Person (END) ###
-
     # Iterate through the survey data and generate prompts for each question for each user
     prompts = []
     custom_id_counter = 0
@@ -457,18 +441,9 @@ def generate_synthetic_experiment_prompts(
         else:
             backstory = ""
 
-        # question_prompt = f"{question} Please only respond with 'Yes' or 'No' and then clearly explain the reasoning steps you took that led to your response on a new line:"
-        # question_prompt = f"{question} Please only respond with 'Yes' or 'No'."
-
-        # Vaccination Intention
-        # question_prompt = f"{question} Please only respond with 'Yes', 'No', 'Do not know', or 'Prefer not to say':"
-        # question_prompt = f"{question} Please first provide your reasoning based on the information available to you, then give your final response in the structured format below:\nReasoning: [Your reasoning]\nResponse: [Yes/No/Do not know/Prefer not to say]"
-        # question_prompt = f"The next page of the survey says: {question} Please only respond with 'Yes', 'No', 'Do not know', or 'Prefer not to say'.\nYou choose:"
-
         # Vaccination Outcome
         question_prompt = f"{question} Please give your response to both questions in the structured format below:\nQuestion 1: [Yes/No]\nQuestion 2: [Yes/No]"
         # question_prompt = f"{question} Please first provide your reasoning based on the information available to you, then give your final response to both questions in the structured format below:\nReasoning for Question 1: [Your reasoning]\nResponse for Question 1: [Yes/No]\nReasoning for Question 2: [Your reasoning]\nResponse for Question 2: [Yes/No]"
-        # question_prompt = f"The next page of the survey says: {question} Please provide your response to both questions in the structured format below:\nQuestion 1: [Yes/No]\nQuestion 2: [Yes/No]"
 
         # TB Screening
         # question_prompt = f"{question} Please give your response to both questions in the structured format below:\nQuestion 1: [Yes/No/Do not know/Prefer not to say]\nQuestion 2: [Yes/No]"
@@ -483,7 +458,6 @@ def generate_synthetic_experiment_prompts(
                     synthetic_experiment=False,
                 )
                 + backstory,
-                # "demographic_info": data.loc[i, "demographic_profile_firstperson"],  # For Predicting Treatment Effect
                 "treatment": data.loc[i, "treatment"],
                 "question": question,
                 "question_prompt": question_prompt,
@@ -756,14 +730,6 @@ def construct_system_message_with_treatment(
     # return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nIn your area, an initiative was implemented that consisted in bringing pop-up tuberculosis clinics in several villages - including yours - so that most villagers could walk to the clinics within minutes.\n\nWhen you were informed of the initiative, you were also presented with a video message. Here is the transcript of the video:\n{treatment_video_transcript[treatment]}"
     ### Configuration for TB Screening RCT (END) ###
 
-    ### Configuration for Predicting Treatment Effect (START) ###
-    # return f"{survey_context}\n\n{demographic_prompt}\nThe first page of the survey involves watching a video with the following transcript: {treatment_video_transcript[treatment]}"
-    ### Configuration for Predicting Treatment Effect (END) ###
-
     ### Configuration for Afrobarometer (START) ###
     # return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nHere is the transcript of the video:\n{treatment_video_transcript[treatment]}"
     ### Configuration for Afrobarometer (END) ###
-
-    ### Configuration for CANDOR (START) ###
-    # return f"{survey_context}\nYour demographic profile:\n{demographic_prompt}"
-    ### Configuration for CANDOR (END) ###

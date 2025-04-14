@@ -80,13 +80,9 @@ def main(request):
     # For Vaccination Intent
     # data_with_responses["user_response"] = data_with_responses[request["question"]]
 
-    # For Vaccination Outcome
+    # For Vaccination Outcome and TB Screening
     data_with_responses["user_response"] = data_with_responses[request["question"][0]]
     data_with_responses["user_response_2"] = data_with_responses[request["question"][1]]
-
-    # For TB Vaccination
-    # data_with_responses["user_response"] = data_with_responses[request["question"][0]]
-    # data_with_responses["user_response_2"] = data_with_responses[request["question"][1]]
 
     # Include model and experiment information
     data_with_responses["model"] = model
