@@ -22,8 +22,7 @@ def main(request):
         request["survey_context"],
         request["demographic_questions"],
         request["question"],
-        include_backstory=False,  # True if backstory should be included
-        backstory_file_path=request["backstory_file_path"],
+        study=request["study"],
     )
 
     # Perform batch query for survey questions
@@ -74,9 +73,10 @@ def main(request):
 if __name__ == "__main__":
     # version = "vaccine_financial_incentive_vaccinationintention_gpt4o_predicttreatmenteffects"  # Vaccination Intent
     version = "vaccine_financial_incentive_vaccinationstatus_gpt4o_predicttreatmenteffects"  # Vaccination Outcome
+    study = "duch_2023"
     current_dir = os.path.dirname(__file__)
     experiment_round = "round9"
-    scenario = "Predicting Treatment Effects"  # instruct, chain_of_thought
+    scenario = "Predicting Treatment Effects"
     model = "GPT 4o"
     # data_file_path = os.path.join(
     #     current_dir,
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
     input_data = {
         "data_file_path": data_file_path,
-        "backstory_file_path": backstory_file_path,
+        "study": study,
         "treatment_assignment_column": treatment_assignment_column,
         "experiment_round": experiment_round,
         "demographic_questions": [

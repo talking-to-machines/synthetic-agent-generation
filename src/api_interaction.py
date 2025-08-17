@@ -138,7 +138,7 @@ def inference_endpoint_query(
     def sanitize_response(response: str) -> str:
         return re.sub(r'[\\/*?:"<>|{}\x00-\x1F\x7F-\x9F]', " ", response)
 
-    def hf_query(row: pd.Series):
+    def hf_query(row: pd.Series, hugging_face=True):
         if not pd.isnull(row["llm_response"]):
             return sanitize_response(row["llm_response"])
 
@@ -147,13 +147,18 @@ def inference_endpoint_query(
             {"role": "user", "content": row[user_message_field]},
         ]
 
-        response = client.chat.completions.create(
-            model="tgi",  # TODO when using dedicated inference endpoint
-            # model="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",  # TODO When using serverless inference
-            messages=messages,
-            max_tokens=200,
-            stream=False,
-        )
+        if hugging_face:
+            response = client.chat.completions.create(
+                model="tgi",
+                messages=messages,
+                stream=False,
+            )
+        else:
+            response = client.chat.completions.create(
+                model="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+                messages=messages,
+                stream=False,
+            )
 
         row["llm_response"] = response.choices[0].message.content
 
@@ -245,7 +250,9 @@ def inference_endpoint_query(
 
     elif model_name == "together":
         client = Together(api_key=TOGETHER_API_KEY)
-        prompts["llm_response"] = prompts.progress_apply(hf_query, axis=1)
+        prompts["llm_response"] = prompts.progress_apply(
+            hf_query, args=(False,), axis=1
+        )
 
     elif model_name == "grok":
         client = OpenAI(base_url="https://api.x.ai/v1", api_key=GROK_API_KEY)
