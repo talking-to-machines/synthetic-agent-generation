@@ -350,8 +350,7 @@ def generate_synthetic_experiment_prompts(
                 "ID": data.loc[i, "ID"],
                 "survey_context": survey_context,
                 "demographic_info": generate_qna_format(
-                    data.loc[i, demographic_questions],
-                    synthetic_experiment=False,
+                    data.loc[i, demographic_questions]
                 ),
                 "treatment": data.loc[i, "treatment"],
                 "question": question,
@@ -366,7 +365,7 @@ def generate_synthetic_experiment_prompts(
             row["survey_context"],
             row["demographic_info"],
             row["treatment"],
-            row["study"],
+            study=study,
         ),
         axis=1,
     )

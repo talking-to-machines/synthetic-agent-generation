@@ -152,6 +152,7 @@ if __name__ == "__main__":
         "raw_folder_path": raw_folder_path,
         "formatted_folder_path": formatted_folder_path,
         "experiment_round": experiment_round,
+        "study": study,
     }
 
     if study == "milkman_control":

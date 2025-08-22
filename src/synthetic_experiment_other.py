@@ -100,29 +100,21 @@ if __name__ == "__main__":
     study = "duch_2023"
     current_dir = os.path.dirname(__file__)
     experiment_round = "round9"
-    scenario = "S6 (LMIC Pilot)"  # S1 (Instruct Model), S2 (Instruction-Tuned Model), S3 (LMIC Survey), S4 (LMIC RCT), S5 (LMIC Survey + RCT), S6 (LMIC Pilot), S7 (LMIC Survey + RCT + Pilot)
+    scenario = "S7 (LMIC Survey + RCT + Pilot)"  # S1 (Instruct Model), S2 (Instruction-Tuned Model), S3 (LMIC Survey), S4 (LMIC RCT), S5 (LMIC Survey + RCT), S6 (LMIC Pilot), S7 (LMIC Survey + RCT + Pilot)
     model = "Llama 3.1 8B"  # Llama 3.1 8B, Mistral 7B, Llama 3.1 70B, Claude 3.5 Sonnet, Gemini 1.5 Pro, Grok 2, DeepSeek R1, DeepSeek R1 Distilled Llama 3.3 70B, Deepseek R1 Distilled Qwen 14B
-    api_url = ""  # HF dedicated inference endpoint
-    model_name = "together"  # huggingface, claude, gemini, together, grok
+    api_url = "https://lsmdsommfypvludf.us-east-1.aws.endpoints.huggingface.cloud/v1/"  # HF dedicated inference endpoint
+    model_name = "huggingface"  # huggingface, claude, gemini, together, grok
     drop_first_row = True
     treatment_assignment_column = "treatment"
 
     if study == "duch_2023":
         # ### Configuration for COVID-19 Vaccination RCT (START) ###
-        version = "vaccine_financial_incentive_vaccinationstatus_llama3.1_8b_wo_intention_s6"  # Vaccination Outcome
-        with_intention = True
-        holdout_set = True
-
-        if holdout_set:
-            data_file_path = os.path.join(
-                current_dir,
-                "../data/duch_et_al_2023_vaccine_financial_vaccination_status_training_wo_intention_holdout.csv",
-            )
-        else:
-            data_file_path = os.path.join(
-                current_dir,
-                "../data/duch_et_al_2023_vaccine_financial_vaccination_status_training.csv",
-            )
+        version = "vaccine_financial_incentive_vaccinationstatus_llama3.1_8b_wo_intention_s7"  # Vaccination Outcome
+        with_intention = False
+        data_file_path = os.path.join(
+            current_dir,
+            "../data/duch_et_al_2023_vaccine_financial_vaccination_status_training.csv",
+        )
 
         input_data = {
             "data_file_path": data_file_path,
