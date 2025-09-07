@@ -82,12 +82,7 @@ def main(request):
             suffixes=("", "_y"),
         )
 
-    elif request["study"] in [
-        "milkman_control",
-        "milkman_baseline",
-        "campos",
-        "duch_2023_synthetic",
-    ]:
+    elif request["study"] in ["milkman_control", "milkman_baseline", "campos", "duch_2023_synthetic"]:
         extract_responses = lambda x: pd.Series(
             {
                 "Question": (
@@ -138,7 +133,9 @@ def main(request):
 
 if __name__ == "__main__":
     current_dir = os.path.dirname(__file__)
-    study = "duch_2023_synthetic"  # duch_2023, duch_2025, milkman_control, milkman_baseline, campos, duch_2023_synthetic
+    study = (
+        "duch_2023_synthetic"  # duch_2023, duch_2025, milkman_control, milkman_baseline, campos, duch_2023_synthetic
+    )
     experiment_round = "round9"
     raw_folder_path = os.path.join(
         current_dir,
