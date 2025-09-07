@@ -337,6 +337,10 @@ def generate_synthetic_experiment_prompts(
             # Vaccination Outcome
             question_prompt = f"{question} Please give your response to both questions in the structured format below:\nQuestion 1: [Yes/No]\nQuestion 2: [Yes/No]"
 
+        elif study == "duch_2023_synthetic":
+            # Vaccination Outcome
+            question_prompt = f"{question} Please give your response to the question in the structured format below:\nQuestion: [Yes/No]"
+
         elif study == "duch_2025":
             # TB Screening
             question_prompt = f"{question} Please give your response to both questions in the structured format below:\nQuestion 1: [Yes/No/Do not know/Prefer not to say]\nQuestion 2: [Yes/No]"
@@ -444,7 +448,7 @@ def construct_system_message_with_treatment(
         return f"{survey_context}\n\nYour demographic profile based on information collected:\n{demographic_prompt}\n\n{milkman_treatments[treatment]}"
         ### Configuration for Milkman et al RCT (END) ###
 
-    elif study == "duch_2023":
+    elif study in ["duch_2023", "duch_2023_synthetic"]:
         ### Configuration for Afrobarometer and COVID-19 Vaccination RCT (START) ###
         return f"{survey_context}\n\nYour demographic profile:\n{demographic_prompt}\n\nYou are asked to watch a video at this point. Here you are provided with the transcript of the video. You have to read the full transcript in order to continue the survey:\n{duch_2023_treatments[treatment]}"
         ### Configuration for Afrobarometer and COVID-19 Vaccination RCT (END) ###

@@ -10,7 +10,7 @@ def main(request):
     data = load_data(data_file_path, drop_first_row=drop_first_row)
 
     # Generate demographic prompts
-    if request["study"] in ["duch_2023", "duch_2025", "campos"]:
+    if request["study"] in ["duch_2023", "duch_2025", "campos", "duch_2023_synthetic"]:
         # ### Configuration for COVID-19 Vaccination RCT, TB Screening RCT, Campos Mercade RCT (START) ###
         prompts = generate_synthetic_experiment_prompts(
             data,
@@ -73,7 +73,12 @@ def main(request):
         ]
 
     # For Campos Mercade RCT, Milkman RCT
-    elif request["study"] in ["campos", "milkman_control", "milkman_baseline"]:
+    elif request["study"] in [
+        "campos",
+        "milkman_control",
+        "milkman_baseline",
+        "duch_2023_synthetic",
+    ]:
         data_with_responses["user_response"] = data_with_responses[request["question"]]
 
     else:
@@ -97,18 +102,18 @@ def main(request):
 
 
 if __name__ == "__main__":
-    study = "duch_2023"
+    study = "duch_2023_synthetic"
     current_dir = os.path.dirname(__file__)
     experiment_round = "round9"
-    scenario = "S7 (LMIC Survey + RCT + Pilot)"  # S1 (Instruct Model), S2 (Instruction-Tuned Model), S3 (LMIC Survey), S4 (LMIC RCT), S5 (LMIC Survey + RCT), S6 (LMIC Pilot), S7 (LMIC Survey + RCT + Pilot)
+    scenario = "S2 (Instruction-Tuned Model)"  # S1 (Instruct Model), S2 (Instruction-Tuned Model), S3 (LMIC Survey), S4 (LMIC RCT), S5 (LMIC Survey + RCT), S6 (LMIC Pilot), S7 (LMIC Survey + RCT + Pilot)
     model = "Llama 3.1 8B"  # Llama 3.1 8B, Mistral 7B, Llama 3.1 70B, Claude 3.5 Sonnet, Gemini 1.5 Pro, Grok 2, DeepSeek R1, DeepSeek R1 Distilled Llama 3.3 70B, Deepseek R1 Distilled Qwen 14B
-    api_url = "https://lsmdsommfypvludf.us-east-1.aws.endpoints.huggingface.cloud/v1/"  # HF dedicated inference endpoint
+    api_url = "https://nbukat9zz1sw97ci.us-east-1.aws.endpoints.huggingface.cloud/v1/"  # HF dedicated inference endpoint
     model_name = "huggingface"  # huggingface, claude, gemini, together, grok
     drop_first_row = True
     treatment_assignment_column = "treatment"
 
     if study == "duch_2023":
-        # ### Configuration for COVID-19 Vaccination RCT (START) ###
+        ### Configuration for COVID-19 Vaccination RCT (START) ###
         version = "vaccine_financial_incentive_vaccinationstatus_llama3.1_8b_wo_intention_s7"  # Vaccination Outcome
         with_intention = False
         data_file_path = os.path.join(
@@ -159,7 +164,34 @@ if __name__ == "__main__":
                 "We understand that there is always some uncertainty regarding all decisions. From 0% to 100%, what do you think are the chances that you will choose to get a first shot of a COVID-19 vaccine within the first 6 weeks after the vaccine becomes available to you? - 4",
             ]
 
-        # ### Configuration for COVID-19 Vaccination RCT (END) ###
+        ### Configuration for COVID-19 Vaccination RCT (END) ###
+
+    elif study == "duch_2023_synthetic":
+        ### Configuration for COVID-19 Vaccination RCT Synthetic - Heterogenity Analysis (START) ###
+        version = "vaccine_financial_incentive_vaccinationstatus_llama3.1_8b_synthetic_s2"  # Vaccination Outcome
+        data_file_path = os.path.join(
+            current_dir,
+            "../data/duch_2023_sim_data.csv",
+        )
+
+        input_data = {
+            "data_file_path": data_file_path,
+            "study": study,
+            "treatment_assignment_column": treatment_assignment_column,
+            "api_url": api_url,
+            "model_name": model_name,
+            "experiment_round": experiment_round,
+            "demographic_questions": [
+                "What is your current age?",
+                "What is your gender?",
+                "What is the highest educational qualification you have completed?",
+                "What is your current working situation?",
+                "How much (in Ghanaian Cedis) on average does your household spend in a typical week on food?",
+            ],
+            "question": "Have you actually received a COVID-19 vaccine and can this be verified in the records of the Ghanaian District Health Offices?",
+            "survey_context": "Please put yourself in the shoes of a human subject participating in a healthcare survey in Ghana about the COVID-19 vaccine. You will be provided with a demographic profile that describes your age, gender, highest education level you achieved, current employment situation, and average household spending. The information will be provided to you in the format of a survey interview. You will see a question from the “Interviewer:” and then your human subject response will be preceded by “Me:”. Lastly, you will watch a video. Thereafter, you will be asked whether you received the COVID-19 vaccination. Please provide a consistent and coherent response using all the information provided. It is crucial for you to accurately replicate the response of a human subject that has the demographic profile you are provided. The human subject response will vary depending on their demographic profile. If you are unsure of an answer, provide a plausible response that is based on all of the information available to you. Respond to each question in the exact format specified and do not add any information beyond what is requested.",
+        }
+        ### Configuration for COVID-19 Vaccination RCT Synthetic - Heterogenity Analysis (END) ###
 
     elif study == "duch_2025":
         ### Configuration for TB Screening RCT (START) ###
